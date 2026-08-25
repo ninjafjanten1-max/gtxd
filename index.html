@@ -68,17 +68,27 @@
     margin-top:2px;
   }
 
+  .controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:16px;
+  }
+
   .status{
     background:var(--panel);
     border:1px solid var(--line);
     border-left:3px solid var(--now);
     border-radius:8px;
     padding:14px 18px;
-    margin-bottom:24px;
     display:flex;
     align-items:center;
     gap:14px;
     font-size:15px;
+    flex:1;
+    min-width:260px;
   }
   .status .dot{
     width:9px;height:9px;border-radius:50%;
@@ -94,13 +104,45 @@
   .status b{font-weight:700;}
   .status .muted{color:var(--muted);}
 
+  .weektoggle{
+    display:flex;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:4px;
+    gap:4px;
+  }
+  .weektoggle button{
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:8px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .15s ease,color .15s ease;
+  }
+  .weektoggle button.active{
+    background:var(--now);
+    color:#fff;
+  }
+  .weektoggle button:not(.active):hover{
+    color:var(--text);
+    background:var(--panel-2);
+  }
+
+  .board-scroll{
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+
   .board{
     display:grid;
     grid-template-columns:52px repeat(5,1fr);
     background:var(--panel-2);
-    border:1px solid var(--line);
-    border-radius:10px;
-    overflow:hidden;
   }
 
   .daylabel{
@@ -111,7 +153,10 @@
     font-size:14px;
     border-bottom:1px solid var(--line);
     border-left:1px solid var(--line);
-    position:relative;
+    position:sticky;
+    top:0;
+    background:var(--panel-2);
+    z-index:3;
   }
   .daylabel.today{color:var(--now);}
   .daylabel .d{
@@ -125,7 +170,7 @@
     margin-top:2px;
   }
   .daylabel.today .d{color:var(--now);}
-  .corner{border-bottom:1px solid var(--line);}
+  .corner{border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel-2);z-index:3;}
 
   .timecol{
     position:relative;
@@ -164,7 +209,10 @@
     border:1px solid rgba(0,0,0,0.25);
     box-shadow:0 1px 2px rgba(0,0,0,0.3);
     transition:transform .15s ease, box-shadow .15s ease;
+    cursor:pointer;
+    z-index:2;
   }
+  .lesson:hover{transform:scale(1.02);box-shadow:0 3px 10px rgba(0,0,0,0.45);}
   .lesson .t{
     font-family:'Space Grotesk',sans-serif;
     font-weight:600;
@@ -189,6 +237,27 @@
     transform:scale(1.015);
     box-shadow:0 0 0 2px var(--now), 0 4px 14px rgba(255,90,54,0.35);
     z-index:5;
+  }
+
+  .gap{
+    position:absolute;
+    left:50%;
+    width:0;
+    border-left:2px dashed #3a4256;
+    z-index:1;
+  }
+  .gap .glbl{
+    position:absolute;
+    left:7px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:9px;
+    color:var(--muted);
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    padding:1px 5px;
+    border-radius:4px;
+    white-space:nowrap;
   }
 
   .nowline{
@@ -227,6 +296,65 @@
     font-size:11px;
   }
 
+  /* Modal */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(8,10,15,0.65);
+    backdrop-filter:blur(2px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:4px solid var(--modal-accent, var(--now));
+    border-radius:12px;
+    max-width:360px;
+    width:100%;
+    padding:22px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .modal h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px;
+    margin:0 0 4px;
+  }
+  .modal .modalday{
+    color:var(--muted);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-bottom:14px;
+  }
+  .modal .row{
+    display:flex;
+    justify-content:space-between;
+    padding:9px 0;
+    border-top:1px solid var(--line);
+    font-size:13.5px;
+  }
+  .modal .row:first-of-type{border-top:1px solid var(--line);}
+  .modal .row span:first-child{color:var(--muted);}
+  .modal .close{
+    position:absolute;
+    top:14px;right:14px;
+    width:28px;height:28px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    color:var(--text);
+    font-size:15px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal .close:hover{background:var(--line);}
+
   @media (max-width:720px){
     .board{grid-template-columns:38px repeat(5,1fr);}
     .lesson{font-size:9.5px;padding:4px 5px;}
@@ -235,6 +363,9 @@
     .daylabel{font-size:11px;padding:8px 2px;}
     .daylabel .d{font-size:9px;}
     .clock{font-size:24px;}
+    .gap .glbl{font-size:8px;padding:1px 3px;}
+    .controls{flex-direction:column;align-items:stretch;}
+    .weektoggle{justify-content:center;}
   }
 </style>
 </head>
@@ -246,23 +377,42 @@
     <div class="clock" id="clock">--:--:--<span class="date" id="dateLabel">—</span></div>
   </header>
 
-  <div class="status" id="statusBar">
-    <div class="dot"></div>
-    <div id="statusText">Laddar…</div>
+  <div class="controls">
+    <div class="status" id="statusBar">
+      <div class="dot"></div>
+      <div id="statusText">Laddar…</div>
+    </div>
+    <div class="weektoggle" id="weekToggle">
+      <button id="btnPappa" data-week="pappa">Pappa-vecka</button>
+      <button id="btnMamma" data-week="mamma">Mamma-vecka</button>
+    </div>
   </div>
 
-  <div class="board" id="board">
-    <div class="corner"></div>
-    <!-- day labels injected by JS -->
+  <div class="board-scroll">
+    <div class="board" id="board">
+      <div class="corner"></div>
+      <!-- day labels injected by JS -->
+    </div>
   </div>
 
-  <footer>Linjen visar var i dagen du befinner dig just nu · uppdateras automatiskt</footer>
+  <footer>Linjen visar var i dagen du befinner dig just nu · streckade linjer visar tid mellan block · klicka på ett block för detaljer</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <button class="close" id="closeModal">✕</button>
+    <div class="modalday" id="modalDay">—</div>
+    <h2 id="modalTitle">—</h2>
+    <div class="row"><span>Tid</span><span id="modalTime">—</span></div>
+    <div class="row"><span>Längd</span><span id="modalDuration">—</span></div>
+    <div class="row" id="modalMetaRow"><span>Info</span><span id="modalMeta">—</span></div>
+  </div>
 </div>
 
 <script>
-/* ---------- SCHEMA-DATA ---------- */
+/* ---------- SKOLSCHEMA (fasta block) ---------- */
 /* day: 1=Mån 2=Tis 3=Ons 4=Tor 5=Fre */
-const lessons = [
+const schoolLessons = [
   // Måndag
   {day:1, start:"09:45", end:"11:35", title:"Ellära Nivå 1", meta:"KaL · E206", color:"#3ecf6a"},
   {day:1, start:"12:15", end:"15:30", title:"Installationsteknik Nivå 1", meta:"CaJ · E174, E177", color:"#c2185b"},
@@ -271,7 +421,7 @@ const lessons = [
   // Tisdag
   {day:2, start:"08:20", end:"09:30", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
   {day:2, start:"09:50", end:"11:10", title:"Svenska Nivå 2", meta:"TvC · E177", color:"#1746d8"},
-  {day:2, start:"11:10", end:"12:20", title:"Installationsteknik Nivå 1", meta:"CaJ · E174", color:"#c2185b"},
+  {day:2, start:"11:20", end:"12:20", title:"Installationsteknik Nivå 1", meta:"CaJ · E174", color:"#c2185b"},
   {day:2, start:"14:10", end:"16:00", title:"Kommunikationsnät Nivå 1", meta:"CaJ · E174, E177", color:"#c2185b"},
   {day:2, start:"18:30", end:"20:00", title:"Träning", meta:"", color:"#0d9488"},
 
@@ -287,12 +437,12 @@ const lessons = [
   // Torsdag
   {day:4, start:"08:20", end:"09:20", title:"Naturkunskap Nivå 1a1", meta:"MiÅ · Q325", color:"#e08a1e"},
   {day:4, start:"09:30", end:"11:20", title:"Underhåll – Elteknik Nivå 1", meta:"CaJ · E174, E177", color:"#0e8f7a"},
-  {day:4, start:"12:50", end:"14:10", title:"Ellära Nivå 1", meta:"KaL · E206", color:"#3ecf6a"},
+  {day:4, start:"12:50", end:"14:40", title:"Ellära Nivå 1", meta:"KaL · E206", color:"#3ecf6a"},
   {day:4, start:"14:50", end:"16:20", title:"Matematik Nivå 2a", meta:"SeN · A11", color:"#e02424"},
   {day:4, start:"18:30", end:"20:00", title:"Träning", meta:"", color:"#0d9488"},
 
   // Fredag
-  {day:5, start:"08:20", end:"09:55", title:"Matematik Nivå 2a", meta:"SeN · A11", color:"#e02424"},
+  {day:5, start:"08:10", end:"09:55", title:"Matematik Nivå 2a", meta:"SeN · A11", color:"#e02424"},
   {day:5, start:"10:15", end:"11:15", title:"Service och bemötande Nivå 1", meta:"SöT · E209", color:"#b5541a"},
   {day:5, start:"12:20", end:"13:30", title:"Svenska Nivå 2", meta:"TvC · E177", color:"#1746d8"},
   {day:5, start:"13:40", end:"14:55", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
@@ -301,25 +451,60 @@ const lessons = [
 const dayNames = {1:"Måndag",2:"Tisdag",3:"Onsdag",4:"Torsdag",5:"Fredag"};
 const dayShort = {1:"MÅN",2:"TIS",3:"ONS",4:"TOR",5:"FRE"};
 
-const DAY_START = 8*60;     // 08:00 in minutes
-const DAY_END   = 20*60+30; // 20:30 in minutes
-const PX_PER_MIN = 1;       // 1px per minute
-const boardHeight = (DAY_END - DAY_START) * PX_PER_MIN;
+/* Vaknar-tider beroende på veckotyp: måndag skiljer sig från övriga dagar */
+const WAKE_TIMES = {
+  pappa: {1:"07:20", other:"06:30"},
+  mamma: {1:"09:00", other:"07:35"}
+};
 
-function toMin(hhmm){
-  const [h,m] = hhmm.split(":").map(Number);
-  return h*60+m;
+function buildRoutineBlocks(weekType){
+  const blocks = [];
+  for(let d=1; d<=5; d++){
+    const wake = d===1 ? WAKE_TIMES[weekType][1] : WAKE_TIMES[weekType].other;
+
+    // morgonens sista sömn (fortsättning på gårdagskvällens läggning)
+    blocks.push({day:d, start:"00:00", end:wake, title:"Sova", meta:"", color:"#2b3050", category:"sova"});
+
+    // kvällsaktiviteter -> läsa -> sova (samma varje dag)
+    blocks.push({day:d, start:"21:00", end:"22:15", title:"Kvällsaktiviteter", meta:"Äta, duscha, träna osv.", color:"#b45309", category:"kvall"});
+    blocks.push({day:d, start:"22:15", end:"22:30", title:"Läsa", meta:"", color:"#64748b", category:"lasa"});
+    blocks.push({day:d, start:"22:30", end:"24:00", title:"Sova", meta:"", color:"#2b3050", category:"sova"});
+  }
+  return blocks;
 }
 
+const DAY_START = 0;        // 00:00
+const DAY_END   = 24*60;    // 24:00
+const PX_PER_MIN = 0.65;
+const boardHeight = (DAY_END - DAY_START) * PX_PER_MIN;
+
+function toMin(hhmmStr){
+  const [h,m] = hhmmStr.split(":").map(Number);
+  return h*60+m;
+}
 function yFor(minutes){
   return (minutes - DAY_START) * PX_PER_MIN;
 }
+function pad(n){return n<10 ? '0'+n : n;}
 
-/* ---------- BUILD BOARD ---------- */
+/* format ex: 45 -> "45 min", 90 -> "1 h 30 min", 60 -> "1 h" */
+function fmtMin(total){
+  total = Math.round(total);
+  const h = Math.floor(total/60), m = total%60;
+  if(h<=0) return m+" min";
+  if(m===0) return h+" h";
+  return h+" h "+m+" min";
+}
+function hhmm(total){
+  return pad(Math.floor(total/60)%24)+':'+pad(Math.round(total)%60);
+}
+
+/* ---------- BOARD SKELETON (byggs en gång) ---------- */
 const board = document.getElementById('board');
 const todayIdx = new Date().getDay(); // 0=Sun..6=Sat
 
-// day header labels
+board.style.gridTemplateRows = 'auto ' + boardHeight + 'px';
+
 for(let d=1; d<=5; d++){
   const lbl = document.createElement('div');
   lbl.className = 'daylabel' + (d===todayIdx ? ' today' : '');
@@ -327,22 +512,20 @@ for(let d=1; d<=5; d++){
   board.appendChild(lbl);
 }
 
-// time column
 const timecol = document.createElement('div');
 timecol.className = 'timecol';
 timecol.style.height = boardHeight + 'px';
 timecol.style.gridRow = '2';
 timecol.style.gridColumn = '1';
-for(let h=8; h<=20; h++){
+for(let h=0; h<24; h++){
   const tick = document.createElement('div');
   tick.className = 'tick';
   tick.style.top = yFor(h*60) + 'px';
-  tick.textContent = (h<10?'0':'')+h+':00';
+  tick.textContent = pad(h)+':00';
   timecol.appendChild(tick);
 }
 board.appendChild(timecol);
 
-// day columns
 const dayColEls = {};
 for(let d=1; d<=5; d++){
   const col = document.createElement('div');
@@ -354,63 +537,128 @@ for(let d=1; d<=5; d++){
   dayColEls[d] = col;
 }
 
-// fix grid template rows
-board.style.display = 'grid';
-board.style.gridTemplateRows = 'auto ' + boardHeight + 'px';
-
-// lessons
-const lessonEls = [];
-lessons.forEach(L=>{
-  const s = toMin(L.start), e = toMin(L.end);
-  const div = document.createElement('div');
-  div.className = 'lesson';
-  div.style.top = yFor(s) + 'px';
-  div.style.height = Math.max((e-s)*PX_PER_MIN - 2, 16) + 'px';
-  div.style.background = L.color;
-  div.style.color = isLight(L.color) ? '#1a1a1a' : '#fff';
-  div.innerHTML =
-    '<span class="t">'+L.title+'</span>' +
-    (L.meta ? '<span class="meta">'+L.meta+'</span>' : '') +
-    '<span class="time">'+L.start+'–'+L.end+'</span>';
-  dayColEls[L.day].appendChild(div);
-  lessonEls.push({el:div, day:L.day, start:s, end:e, title:L.title});
-});
-
 function isLight(hex){
   const c = hex.replace('#','');
   const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
   return (0.299*r + 0.587*g + 0.114*b) > 170;
 }
 
-/* ---------- LIVE NOW-LINE + STATUS ---------- */
-let nowLineEl = null;
+/* ---------- MODAL ---------- */
+const overlay = document.getElementById('overlay');
+const modal = document.getElementById('modal');
+function openModal(L, s, e){
+  document.getElementById('modalDay').textContent = dayNames[L.day];
+  document.getElementById('modalTitle').textContent = L.title;
+  document.getElementById('modalTime').textContent = L.start + '–' + L.end;
+  document.getElementById('modalDuration').textContent = fmtMin(e-s);
+  const metaRow = document.getElementById('modalMetaRow');
+  if(L.meta){
+    metaRow.style.display = 'flex';
+    document.getElementById('modalMeta').textContent = L.meta;
+  } else {
+    metaRow.style.display = 'none';
+  }
+  modal.style.setProperty('--modal-accent', L.color);
+  overlay.classList.add('open');
+}
+document.getElementById('closeModal').addEventListener('click', ()=> overlay.classList.remove('open'));
+overlay.addEventListener('click', (ev)=>{ if(ev.target === overlay) overlay.classList.remove('open'); });
+document.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape') overlay.classList.remove('open'); });
 
-function pad(n){return n<10 ? '0'+n : n;}
+/* ---------- RENDER (byggs om vid veckobyte) ---------- */
+let lessonEls = [];
+
+function renderBoard(weekType){
+  // rensa gamla block/gaps ur varje dagkolumn (men behåll ev. nu-linje separat)
+  for(let d=1; d<=5; d++){
+    dayColEls[d].querySelectorAll('.lesson, .gap').forEach(n=>n.remove());
+  }
+  lessonEls = [];
+
+  const combined = schoolLessons.concat(buildRoutineBlocks(weekType));
+
+  combined.forEach(L=>{
+    const s = toMin(L.start), e = toMin(L.end);
+    const div = document.createElement('div');
+    div.className = 'lesson';
+    div.style.top = yFor(s) + 'px';
+    div.style.height = Math.max((e-s)*PX_PER_MIN - 2, 15) + 'px';
+    div.style.background = L.color;
+    div.style.color = isLight(L.color) ? '#1a1a1a' : '#fff';
+    div.innerHTML =
+      '<span class="t">'+L.title+'</span>' +
+      (L.meta ? '<span class="meta">'+L.meta+'</span>' : '') +
+      '<span class="time">'+L.start+'–'+L.end+'</span>';
+    div.addEventListener('click', ()=> openModal(L, s, e));
+    dayColEls[L.day].appendChild(div);
+    lessonEls.push({el:div, day:L.day, start:s, end:e, title:L.title});
+  });
+
+  // gap-indikatorer mellan alla block (inkl. sova/läsa/kvällsaktiviteter) per dag
+  for(let d=1; d<=5; d++){
+    const dayBlocks = combined
+      .filter(L=>L.day===d)
+      .map(L=>({s:toMin(L.start), e:toMin(L.end)}))
+      .sort((a,b)=>a.s-b.s);
+
+    for(let i=0; i<dayBlocks.length-1; i++){
+      const gapStart = dayBlocks[i].e;
+      const gapEnd = dayBlocks[i+1].s;
+      const gapMin = gapEnd - gapStart;
+      if(gapMin <= 0) continue;
+
+      const gap = document.createElement('div');
+      gap.className = 'gap';
+      gap.style.top = yFor(gapStart) + 'px';
+      gap.style.height = (gapEnd-gapStart)*PX_PER_MIN + 'px';
+      const glbl = document.createElement('span');
+      glbl.className = 'glbl';
+      glbl.textContent = fmtMin(gapMin);
+      gap.appendChild(glbl);
+      dayColEls[d].appendChild(gap);
+    }
+  }
+
+  update();
+}
+
+/* ---------- VECKOTOGGLE ---------- */
+let currentWeek = localStorage.getItem('veckoschema-week') || 'pappa';
+const btnPappa = document.getElementById('btnPappa');
+const btnMamma = document.getElementById('btnMamma');
+
+function setWeek(weekType){
+  currentWeek = weekType;
+  localStorage.setItem('veckoschema-week', weekType);
+  btnPappa.classList.toggle('active', weekType==='pappa');
+  btnMamma.classList.toggle('active', weekType==='mamma');
+  renderBoard(weekType);
+}
+btnPappa.addEventListener('click', ()=> setWeek('pappa'));
+btnMamma.addEventListener('click', ()=> setWeek('mamma'));
+
+/* ---------- LIVE NU-LINJE + KLOCKA + STATUS ---------- */
+let nowLineEl = null;
 
 function update(){
   const now = new Date();
-  const dow = now.getDay(); // 0=Sun..6=Sat
-  const mins = now.getHours()*60 + now.getMinutes();
+  const dow = now.getDay();
+  const mins = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
 
-  // clock
   document.getElementById('clock').innerHTML =
     pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()) +
     '<span class="date">'+ now.toLocaleDateString('sv-SE',{weekday:'long', day:'numeric', month:'long'}) +'</span>';
 
-  // clear active states
   lessonEls.forEach(o=>o.el.classList.remove('active'));
 
   const isSchoolDay = dow>=1 && dow<=5;
 
-  // now-line
-  if(isSchoolDay && mins >= DAY_START && mins <= DAY_END){
+  if(isSchoolDay){
     if(!nowLineEl){
       nowLineEl = document.createElement('div');
       nowLineEl.className = 'nowline';
       nowLineEl.innerHTML = '<span class="lbl" id="nowlbl"></span>';
-      dayColEls[dow].appendChild(nowLineEl);
     }
-    // in case day changed since last render, re-attach to right column
     if(nowLineEl.parentElement !== dayColEls[dow]){
       dayColEls[dow].appendChild(nowLineEl);
     }
@@ -421,7 +669,6 @@ function update(){
     nowLineEl = null;
   }
 
-  // status text
   const statusText = document.getElementById('statusText');
   if(!isSchoolDay){
     statusText.innerHTML = '<b>Helg</b> <span class="muted">— inget schemalagt</span>';
@@ -430,19 +677,14 @@ function update(){
     if(current){
       current.el.classList.add('active');
       const left = current.end - mins;
-      statusText.innerHTML = 'Du är mitt i <b>'+current.title+'</b> <span class="muted">— slutar om '+left+' min</span>';
+      statusText.innerHTML = 'Du är mitt i <b>'+current.title+'</b> <span class="muted">— slutar om '+fmtMin(left)+'</span>';
     } else {
       const upcoming = lessonEls
         .filter(o => o.day===dow && o.start > mins)
         .sort((a,b)=>a.start-b.start)[0];
       if(upcoming){
         const until = upcoming.start - mins;
-        statusText.innerHTML = 'Ingen aktivitet just nu <span class="muted">— nästa: <b>'+upcoming.title+'</b> om '+until+' min</span>';
-      } else if(mins < DAY_START){
-        const first = lessonEls.filter(o=>o.day===dow).sort((a,b)=>a.start-b.start)[0];
-        statusText.innerHTML = first
-          ? 'Dagen har inte börjat <span class="muted">— först ut: <b>'+first.title+'</b> kl '+pad(Math.floor(first.start/60))+':'+pad(first.start%60)+'</span>'
-          : 'Inget schemalagt idag';
+        statusText.innerHTML = 'Ingen aktivitet just nu <span class="muted">— nästa: <b>'+upcoming.title+'</b> om '+fmtMin(until)+' ('+hhmm(upcoming.start)+')</span>';
       } else {
         statusText.innerHTML = '<b>Klart för idag</b> <span class="muted">— inget mer schemalagt</span>';
       }
@@ -450,8 +692,11 @@ function update(){
   }
 }
 
-update();
-setInterval(update, 15000);
+/* ---------- INIT ---------- */
+btnPappa.classList.toggle('active', currentWeek==='pappa');
+btnMamma.classList.toggle('active', currentWeek==='mamma');
+renderBoard(currentWeek);
+setInterval(update, 1000);
 </script>
 </body>
 </html>
