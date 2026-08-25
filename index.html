@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veckoschema — Live</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#10131b;
+    --panel:#1a1f2b;
+    --panel-2:#151a24;
+    --line:#262c3a;
+    --text:#f0f2f7;
+    --muted:#7c8599;
+    --now:#ff5a36;
+    --now-glow: rgba(255,90,54,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:28px 20px 60px;
+  }
+
+  .wrap{max-width:1200px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:18px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+  }
+
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(24px,4vw,34px);
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  h1 span{color:var(--now);}
+
+  .clock{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:34px;
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:0.02em;
+  }
+  .clock .date{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    font-weight:500;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin-top:2px;
+  }
+
+  .status{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--now);
+    border-radius:8px;
+    padding:14px 18px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-size:15px;
+  }
+  .status .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--now);
+    box-shadow:0 0 0 5px var(--now-glow);
+    flex-shrink:0;
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 5px var(--now-glow);}
+    50%{box-shadow:0 0 0 9px transparent;}
+  }
+  .status b{font-weight:700;}
+  .status .muted{color:var(--muted);}
+
+  .board{
+    display:grid;
+    grid-template-columns:52px repeat(5,1fr);
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  .daylabel{
+    padding:12px 6px;
+    text-align:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border-bottom:1px solid var(--line);
+    border-left:1px solid var(--line);
+    position:relative;
+  }
+  .daylabel.today{color:var(--now);}
+  .daylabel .d{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-top:2px;
+  }
+  .daylabel.today .d{color:var(--now);}
+  .corner{border-bottom:1px solid var(--line);}
+
+  .timecol{
+    position:relative;
+    border-right:1px solid var(--line);
+  }
+  .timecol .tick{
+    position:absolute;
+    right:6px;
+    transform:translateY(-50%);
+    font-size:10px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .daycol{
+    position:relative;
+    border-left:1px solid var(--line);
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 59px,
+        var(--line) 60px
+      );
+  }
+  .daycol.today{background-color:rgba(255,90,54,0.035);}
+
+  .lesson{
+    position:absolute;
+    left:4px;right:4px;
+    border-radius:6px;
+    padding:6px 8px;
+    font-size:11.5px;
+    line-height:1.35;
+    overflow:hidden;
+    border:1px solid rgba(0,0,0,0.25);
+    box-shadow:0 1px 2px rgba(0,0,0,0.3);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .lesson .t{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:12px;
+    display:block;
+  }
+  .lesson .meta{
+    display:block;
+    opacity:0.85;
+    font-size:10.5px;
+    margin-top:1px;
+  }
+  .lesson .time{
+    display:block;
+    font-size:9.5px;
+    opacity:0.7;
+    margin-top:2px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .lesson.active{
+    transform:scale(1.015);
+    box-shadow:0 0 0 2px var(--now), 0 4px 14px rgba(255,90,54,0.35);
+    z-index:5;
+  }
+
+  .nowline{
+    position:absolute;
+    left:0;right:0;
+    height:0;
+    border-top:2px solid var(--now);
+    z-index:6;
+    pointer-events:none;
+  }
+  .nowline::before{
+    content:"";
+    position:absolute;
+    left:-4px;top:-4px;
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--now);
+    box-shadow:0 0 8px 2px var(--now-glow);
+  }
+  .nowline .lbl{
+    position:absolute;
+    right:4px;top:-9px;
+    background:var(--now);
+    color:#fff;
+    font-size:9.5px;
+    font-weight:700;
+    padding:1px 5px;
+    border-radius:4px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  footer{
+    margin-top:20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:11px;
+  }
+
+  @media (max-width:720px){
+    .board{grid-template-columns:38px repeat(5,1fr);}
+    .lesson{font-size:9.5px;padding:4px 5px;}
+    .lesson .t{font-size:10px;}
+    .lesson .meta,.lesson .time{font-size:8.5px;}
+    .daylabel{font-size:11px;padding:8px 2px;}
+    .daylabel .d{font-size:9px;}
+    .clock{font-size:24px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Veckoschema <span>· live</span></h1>
+    <div class="clock" id="clock">--:--:--<span class="date" id="dateLabel">—</span></div>
+  </header>
+
+  <div class="status" id="statusBar">
+    <div class="dot"></div>
+    <div id="statusText">Laddar…</div>
+  </div>
+
+  <div class="board" id="board">
+    <div class="corner"></div>
+    <!-- day labels injected by JS -->
+  </div>
+
+  <footer>Linjen visar var i dagen du befinner dig just nu · uppdateras automatiskt</footer>
+</div>
+
+<script>
+/* ---------- SCHEMA-DATA ---------- */
+/* day: 1=Mån 2=Tis 3=Ons 4=Tor 5=Fre */
+const lessons = [
+  // Måndag
+  {day:1, start:"09:45", end:"11:35", title:"Ellära Nivå 1", meta:"KaL · E206", color:"#3ecf6a"},
+  {day:1, start:"12:15", end:"15:30", title:"Installationsteknik Nivå 1", meta:"CaJ · E174, E177", color:"#c2185b"},
+  {day:1, start:"15:40", end:"16:40", title:"Naturkunskap Nivå 1a1", meta:"MiÅ · Q323", color:"#e08a1e"},
+
+  // Tisdag
+  {day:2, start:"08:20", end:"09:30", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
+  {day:2, start:"09:50", end:"11:10", title:"Svenska Nivå 2", meta:"TvC · E177", color:"#1746d8"},
+  {day:2, start:"11:10", end:"12:20", title:"Installationsteknik Nivå 1", meta:"CaJ · E174", color:"#c2185b"},
+  {day:2, start:"14:10", end:"16:00", title:"Kommunikationsnät Nivå 1", meta:"CaJ · E174, E177", color:"#c2185b"},
+  {day:2, start:"18:30", end:"20:00", title:"Träning", meta:"", color:"#0d9488"},
+
+  // Onsdag
+  {day:3, start:"08:10", end:"08:30", title:"Mentorstid", meta:"CaJ · E174, E177", color:"#4a5568"},
+  {day:3, start:"08:30", end:"09:55", title:"Installationsteknik Nivå 1", meta:"CaJ · E174, E177", color:"#c2185b"},
+  {day:3, start:"10:05", end:"11:10", title:"Kommunikationsnät Nivå 1", meta:"CaJ · E174, E177", color:"#c2185b"},
+  {day:3, start:"11:50", end:"12:50", title:"Service och bemötande Nivå 1", meta:"SöT · E177", color:"#b5541a"},
+  {day:3, start:"13:00", end:"14:10", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
+  {day:3, start:"14:20", end:"15:30", title:"Svenska Nivå 2", meta:"TvC · E177", color:"#1746d8"},
+  {day:3, start:"16:00", end:"18:30", title:"Hemspråk", meta:"", color:"#7c3aed"},
+
+  // Torsdag
+  {day:4, start:"08:20", end:"09:20", title:"Naturkunskap Nivå 1a1", meta:"MiÅ · Q325", color:"#e08a1e"},
+  {day:4, start:"09:30", end:"11:20", title:"Underhåll – Elteknik Nivå 1", meta:"CaJ · E174, E177", color:"#0e8f7a"},
+  {day:4, start:"12:50", end:"14:10", title:"Ellära Nivå 1", meta:"KaL · E206", color:"#3ecf6a"},
+  {day:4, start:"14:50", end:"16:20", title:"Matematik Nivå 2a", meta:"SeN · A11", color:"#e02424"},
+  {day:4, start:"18:30", end:"20:00", title:"Träning", meta:"", color:"#0d9488"},
+
+  // Fredag
+  {day:5, start:"08:20", end:"09:55", title:"Matematik Nivå 2a", meta:"SeN · A11", color:"#e02424"},
+  {day:5, start:"10:15", end:"11:15", title:"Service och bemötande Nivå 1", meta:"SöT · E209", color:"#b5541a"},
+  {day:5, start:"12:20", end:"13:30", title:"Svenska Nivå 2", meta:"TvC · E177", color:"#1746d8"},
+  {day:5, start:"13:40", end:"14:55", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
+];
+
+const dayNames = {1:"Måndag",2:"Tisdag",3:"Onsdag",4:"Torsdag",5:"Fredag"};
+const dayShort = {1:"MÅN",2:"TIS",3:"ONS",4:"TOR",5:"FRE"};
+
+const DAY_START = 8*60;     // 08:00 in minutes
+const DAY_END   = 20*60+30; // 20:30 in minutes
+const PX_PER_MIN = 1;       // 1px per minute
+const boardHeight = (DAY_END - DAY_START) * PX_PER_MIN;
+
+function toMin(hhmm){
+  const [h,m] = hhmm.split(":").map(Number);
+  return h*60+m;
+}
+
+function yFor(minutes){
+  return (minutes - DAY_START) * PX_PER_MIN;
+}
+
+/* ---------- BUILD BOARD ---------- */
+const board = document.getElementById('board');
+const todayIdx = new Date().getDay(); // 0=Sun..6=Sat
+
+// day header labels
+for(let d=1; d<=5; d++){
+  const lbl = document.createElement('div');
+  lbl.className = 'daylabel' + (d===todayIdx ? ' today' : '');
+  lbl.innerHTML = dayNames[d] + '<span class="d">' + dayShort[d] + '</span>';
+  board.appendChild(lbl);
+}
+
+// time column
+const timecol = document.createElement('div');
+timecol.className = 'timecol';
+timecol.style.height = boardHeight + 'px';
+timecol.style.gridRow = '2';
+timecol.style.gridColumn = '1';
+for(let h=8; h<=20; h++){
+  const tick = document.createElement('div');
+  tick.className = 'tick';
+  tick.style.top = yFor(h*60) + 'px';
+  tick.textContent = (h<10?'0':'')+h+':00';
+  timecol.appendChild(tick);
+}
+board.appendChild(timecol);
+
+// day columns
+const dayColEls = {};
+for(let d=1; d<=5; d++){
+  const col = document.createElement('div');
+  col.className = 'daycol' + (d===todayIdx ? ' today' : '');
+  col.style.height = boardHeight + 'px';
+  col.style.gridRow = '2';
+  col.style.gridColumn = (d+1);
+  board.appendChild(col);
+  dayColEls[d] = col;
+}
+
+// fix grid template rows
+board.style.display = 'grid';
+board.style.gridTemplateRows = 'auto ' + boardHeight + 'px';
+
+// lessons
+const lessonEls = [];
+lessons.forEach(L=>{
+  const s = toMin(L.start), e = toMin(L.end);
+  const div = document.createElement('div');
+  div.className = 'lesson';
+  div.style.top = yFor(s) + 'px';
+  div.style.height = Math.max((e-s)*PX_PER_MIN - 2, 16) + 'px';
+  div.style.background = L.color;
+  div.style.color = isLight(L.color) ? '#1a1a1a' : '#fff';
+  div.innerHTML =
+    '<span class="t">'+L.title+'</span>' +
+    (L.meta ? '<span class="meta">'+L.meta+'</span>' : '') +
+    '<span class="time">'+L.start+'–'+L.end+'</span>';
+  dayColEls[L.day].appendChild(div);
+  lessonEls.push({el:div, day:L.day, start:s, end:e, title:L.title});
+});
+
+function isLight(hex){
+  const c = hex.replace('#','');
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  return (0.299*r + 0.587*g + 0.114*b) > 170;
+}
+
+/* ---------- LIVE NOW-LINE + STATUS ---------- */
+let nowLineEl = null;
+
+function pad(n){return n<10 ? '0'+n : n;}
+
+function update(){
+  const now = new Date();
+  const dow = now.getDay(); // 0=Sun..6=Sat
+  const mins = now.getHours()*60 + now.getMinutes();
+
+  // clock
+  document.getElementById('clock').innerHTML =
+    pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()) +
+    '<span class="date">'+ now.toLocaleDateString('sv-SE',{weekday:'long', day:'numeric', month:'long'}) +'</span>';
+
+  // clear active states
+  lessonEls.forEach(o=>o.el.classList.remove('active'));
+
+  const isSchoolDay = dow>=1 && dow<=5;
+
+  // now-line
+  if(isSchoolDay && mins >= DAY_START && mins <= DAY_END){
+    if(!nowLineEl){
+      nowLineEl = document.createElement('div');
+      nowLineEl.className = 'nowline';
+      nowLineEl.innerHTML = '<span class="lbl" id="nowlbl"></span>';
+      dayColEls[dow].appendChild(nowLineEl);
+    }
+    // in case day changed since last render, re-attach to right column
+    if(nowLineEl.parentElement !== dayColEls[dow]){
+      dayColEls[dow].appendChild(nowLineEl);
+    }
+    nowLineEl.style.top = yFor(mins) + 'px';
+    document.getElementById('nowlbl').textContent = pad(now.getHours())+':'+pad(now.getMinutes());
+  } else if(nowLineEl){
+    nowLineEl.remove();
+    nowLineEl = null;
+  }
+
+  // status text
+  const statusText = document.getElementById('statusText');
+  if(!isSchoolDay){
+    statusText.innerHTML = '<b>Helg</b> <span class="muted">— inget schemalagt</span>';
+  } else {
+    const current = lessonEls.find(o => o.day===dow && mins>=o.start && mins<o.end);
+    if(current){
+      current.el.classList.add('active');
+      const left = current.end - mins;
+      statusText.innerHTML = 'Du är mitt i <b>'+current.title+'</b> <span class="muted">— slutar om '+left+' min</span>';
+    } else {
+      const upcoming = lessonEls
+        .filter(o => o.day===dow && o.start > mins)
+        .sort((a,b)=>a.start-b.start)[0];
+      if(upcoming){
+        const until = upcoming.start - mins;
+        statusText.innerHTML = 'Ingen aktivitet just nu <span class="muted">— nästa: <b>'+upcoming.title+'</b> om '+until+' min</span>';
+      } else if(mins < DAY_START){
+        const first = lessonEls.filter(o=>o.day===dow).sort((a,b)=>a.start-b.start)[0];
+        statusText.innerHTML = first
+          ? 'Dagen har inte börjat <span class="muted">— först ut: <b>'+first.title+'</b> kl '+pad(Math.floor(first.start/60))+':'+pad(first.start%60)+'</span>'
+          : 'Inget schemalagt idag';
+      } else {
+        statusText.innerHTML = '<b>Klart för idag</b> <span class="muted">— inget mer schemalagt</span>';
+      }
+    }
+  }
+}
+
+update();
+setInterval(update, 15000);
+</script>
+</body>
+</html>
