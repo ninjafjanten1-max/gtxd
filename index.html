@@ -457,6 +457,17 @@ const WAKE_TIMES = {
   mamma: {1:"09:00", other:"07:35"}
 };
 
+/* Busstider gäller bara pappa-vecka (mamma-vecka bor 6 min från skolan) */
+const BUS_TIMES = {
+  1:      {depart:"08:48", arrive:"09:17", atSchool:"09:28"},
+  other:  {depart:"07:04", arrive:"07:33", atSchool:"07:45"}
+};
+
+function firstLessonStart(d){
+  const starts = schoolLessons.filter(L=>L.day===d).map(L=>toMin(L.start));
+  return starts.length ? Math.min(...starts) : null;
+}
+
 function buildRoutineBlocks(weekType){
   const blocks = [];
   for(let d=1; d<=5; d++){
@@ -469,6 +480,23 @@ function buildRoutineBlocks(weekType){
     blocks.push({day:d, start:"21:00", end:"22:15", title:"Kvällsaktiviteter", meta:"Äta, duscha, träna osv.", color:"#b45309", category:"kvall"});
     blocks.push({day:d, start:"22:15", end:"22:30", title:"Läsa", meta:"", color:"#64748b", category:"lasa"});
     blocks.push({day:d, start:"22:30", end:"24:00", title:"Sova", meta:"", color:"#2b3050", category:"sova"});
+
+    if(weekType === 'pappa'){
+      // buss: gå till hållplats -> buss avgår -> buss framme -> gå till skolan
+      const bus = d===1 ? BUS_TIMES[1] : BUS_TIMES.other;
+      const walkMin = d===1 ? 17 : 16;
+      const departMin = toMin(bus.depart);
+      const walkStart = hhmm(departMin - walkMin);
+      blocks.push({day:d, start:walkStart, end:bus.depart, title:"Gå till bussen", meta:"", color:"#0369a1", category:"transport"});
+      blocks.push({day:d, start:bus.depart, end:bus.arrive, title:"Buss", meta:"Avgår "+bus.depart+", framme "+bus.arrive, color:"#0ea5e9", category:"transport"});
+      blocks.push({day:d, start:bus.arrive, end:bus.atSchool, title:"Gå till skolan", meta:"", color:"#0369a1", category:"transport"});
+    } else {
+      // mamma-vecka: cykla 12 min innan första lektionen
+      const fls = firstLessonStart(d);
+      if(fls !== null){
+        blocks.push({day:d, start:hhmm(fls-12), end:hhmm(fls), title:"Cykla", meta:"", color:"#0369a1", category:"transport"});
+      }
+    }
   }
   return blocks;
 }
