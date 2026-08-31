@@ -50,6 +50,19 @@
   }
   h1 span{color:var(--now);}
 
+  .weekbadge{
+    display:inline-block;
+    margin-top:6px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:3px 10px;
+    border-radius:999px;
+  }
+
   .clock{
     font-family:'Space Grotesk',sans-serif;
     font-size:34px;
@@ -170,6 +183,14 @@
     margin-top:2px;
   }
   .daylabel.today .d{color:var(--now);}
+  .daylabel .datenum{
+    display:block;
+    font-size:10px;
+    color:var(--muted);
+    margin-top:1px;
+    font-variant-numeric:tabular-nums;
+  }
+  .daylabel.today .datenum{color:var(--now);}
   .corner{border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel-2);z-index:3;}
 
   .timecol{
@@ -296,6 +317,97 @@
     font-size:11px;
   }
 
+  .chatbot-card{
+    margin-top:24px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px 18px;
+  }
+  .chatbot-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+  .chatbot-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:16px;
+  }
+  .chatbot-sub{
+    font-size:11.5px;
+    color:var(--muted);
+  }
+  #startChatBtn{
+    background:var(--now);
+    color:#fff;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:10px 20px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #startChatBtn:hover{filter:brightness(1.08);}
+
+  #chatLog{
+    height:260px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:4px 4px 8px;
+    margin-bottom:10px;
+  }
+  .msg{
+    max-width:75%;
+    padding:8px 12px;
+    border-radius:12px;
+    font-size:13.5px;
+    line-height:1.4;
+  }
+  .msg.bot{
+    align-self:flex-start;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-bottom-left-radius:3px;
+  }
+  .msg.user{
+    align-self:flex-end;
+    background:var(--now);
+    color:#fff;
+    border-bottom-right-radius:3px;
+  }
+  .chatInputRow{
+    display:flex;
+    gap:8px;
+  }
+  #chatInput{
+    flex:1;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+  }
+  #chatInput:focus{outline:1px solid var(--now);}
+  #chatSend{
+    background:var(--now);
+    color:#fff;
+    border:none;
+    font-weight:600;
+    padding:0 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13.5px;
+  }
+  #chatSend:hover{filter:brightness(1.08);}
+
   /* Modal */
   .overlay{
     position:fixed;
@@ -373,7 +485,10 @@
 <div class="wrap">
 
   <header>
-    <h1>Veckoschema <span>· live</span></h1>
+    <div>
+      <h1>Veckoschema <span>· live</span></h1>
+      <div class="weekbadge" id="weekBadge">Vecka —</div>
+    </div>
     <div class="clock" id="clock">--:--:--<span class="date" id="dateLabel">—</span></div>
   </header>
 
@@ -392,6 +507,16 @@
     <div class="board" id="board">
       <div class="corner"></div>
       <!-- day labels injected by JS -->
+    </div>
+  </div>
+
+  <div class="chatbot-card">
+    <div class="chatbot-head">
+      <span class="chatbot-title">🤖 Chattbot</span>
+      <span class="chatbot-sub">en enkel låtsas-AI, svarar på nyckelord</span>
+    </div>
+    <div id="chatContainer">
+      <button id="startChatBtn">Börja chatta</button>
     </div>
   </div>
 
@@ -531,12 +656,34 @@ function hhmm(total){
 const board = document.getElementById('board');
 const todayIdx = new Date().getDay(); // 0=Sun..6=Sat
 
+function getMonday(date){
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day===0 ? -6 : 1) - day;
+  d.setDate(d.getDate()+diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function getISOWeek(date){
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+}
+
+const mondayThisWeek = getMonday(new Date());
+document.getElementById('weekBadge').textContent = 'Vecka ' + getISOWeek(new Date());
+
 board.style.gridTemplateRows = 'auto ' + boardHeight + 'px';
 
 for(let d=1; d<=5; d++){
+  const lblDate = new Date(mondayThisWeek);
+  lblDate.setDate(lblDate.getDate() + (d-1));
+  const dateStr = pad(lblDate.getDate()) + '/' + pad(lblDate.getMonth()+1);
+
   const lbl = document.createElement('div');
   lbl.className = 'daylabel' + (d===todayIdx ? ' today' : '');
-  lbl.innerHTML = dayNames[d] + '<span class="d">' + dayShort[d] + '</span>';
+  lbl.innerHTML = dayNames[d] + '<span class="d">' + dayShort[d] + '</span><span class="datenum">' + dateStr + '</span>';
   board.appendChild(lbl);
 }
 
@@ -725,6 +872,177 @@ btnPappa.classList.toggle('active', currentWeek==='pappa');
 btnMamma.classList.toggle('active', currentWeek==='mamma');
 renderBoard(currentWeek);
 setInterval(update, 1000);
+
+/* ---------- CHATTBOT (laddas bara vid klick, för att inte slösa resurser i onödan) ---------- */
+document.getElementById('startChatBtn').addEventListener('click', initChatbot, {once:true});
+
+function initChatbot(){
+  const container = document.getElementById('chatContainer');
+  container.innerHTML =
+    '<div id="chatLog"></div>' +
+    '<div class="chatInputRow">' +
+      '<input id="chatInput" type="text" placeholder="Skriv något, t.ex. \'hej\'…" autocomplete="off">' +
+      '<button id="chatSend">Skicka</button>' +
+    '</div>';
+
+  /* ~100 nyckelordsgrupper, varje grupp har flera synonymer och flera möjliga svar (cleverbot-stil) */
+  const RULES = [
+    {k:["hej","hallå","tja","tjena","hejsan","yo"], r:["Hej på dig!","Tjena!","Hallå där!","Hej hej! 👋"]},
+    {k:["hejdå","vi ses","ha det","farväl"], r:["Hejdå! Vi ses!","Ha det så bra!","Vi hörs igen snart!"]},
+    {k:["läget","whats up"], r:["Helt okej här, du då?","Lugnt läge, tack för att du frågar!","Ganska bra faktiskt!"]},
+    {k:["mår"], r:["Jag mår bra, tack för att du frågar!","Toppen, tack! Och du?","Kan inte klaga, hur mår du?"]},
+    {k:["jättebra","toppen","super","perfekt"], r:["Vad kul att höra!","Härligt!","Yes, snyggt!"]},
+    {k:["dåligt","urkasst","kass"], r:["Åh nej, hoppas det blir bättre snart.","Tråkigt att höra, vad har hänt?","Hoppas du mår bättre snart."]},
+    {k:["trött","sömnig","orkar inte"], r:["Kanske dags att lägga sig lite tidigare?","Trötta dagar är jobbiga, vila lite!","Ta en powernap!"]},
+    {k:["glad","lycklig","gladtig"], r:["Så kul att du är glad!","Glädje smittar, jag blir glad av det!"]},
+    {k:["ledsen","sorgsen"], r:["Jag är ledsen att höra det. Vill du prata om det?","Hoppas det ordnar sig snart."]},
+    {k:["sur"], r:["Vad har gjort dig sur?","Hoppas det lättar snart."]},
+    {k:["arg","förbannad","irriterad"], r:["Vad har gjort dig arg?","Ta ett djupt andetag, det brukar hjälpa."]},
+    {k:["stressad","stress"], r:["Stress är jobbigt, kom ihåg att ta pauser.","Andas lugnt, du klarar det här!"]},
+    {k:["väder","sol","regn","snö","kallt","varmt"], r:["Vet inte hur vädret är just nu men jag hoppas det är skönt ute!","Väder är alltid ett bra samtalsämne 😄"]},
+    {k:["skola"], r:["Skolan kan vara jobbig ibland, men du fixar det!","Lycka till med skolan!"]},
+    {k:["läxa","läxor"], r:["Läxor kan vara jobbiga men du fixar det!","Behöver du hjälp med läxorna?"]},
+    {k:["prov","tenta"], r:["Lycka till på provet!","Pluggat klart inför provet?"]},
+    {k:["lärare"], r:["Hoppas läraren är schysst!","Lärare kan vara både snälla och stränga."]},
+    {k:["lektion"], r:["Hoppas lektionerna går bra!"]},
+    {k:["rast"], r:["Rast är bästa delen av dagen, eller hur?"]},
+    {k:["spela","spel","tv-spel"], r:["Vilket spel spelar du?","Spel är kul, vad är din favorit?"]},
+    {k:["film","serie","netflix"], r:["Sett något bra på sistone?","Filmer är ett bra sätt att koppla av."]},
+    {k:["musik","låt","sång"], r:["Vad lyssnar du på?","Musik är livet!"]},
+    {k:["träna","gym","träning"], r:["Bra jobbat om du tränar!","Träning ger energi, kör hårt!"]},
+    {k:["sova","sömn"], r:["Sömn är viktigt, se till att få tillräckligt!","Sov gott när det är dags!"]},
+    {k:["vaken"], r:["Piggt att vara vaken!","Hoppas du sov bra innan."]},
+    {k:["äta","hungrig"], r:["Vad ska du äta?","Mat är alltid en bra idé."]},
+    {k:["mat"], r:["Vad blir det till mat?","Mat för dagen, viktigt!"]},
+    {k:["dricka","törstig","vatten"], r:["Kom ihåg att dricka vatten!","Törstig? Dags för lite vatten."]},
+    {k:["pizza"], r:["Pizza är alltid en bra idé! 🍕","Vilken smak gillar du bäst?"]},
+    {k:["godis","choklad"], r:["Godis är gott men lagom är bäst!","Choklad löser det mesta 😄"]},
+    {k:["kaffe"], r:["Kaffe ger energi! ☕","Är du en kaffe- eller te-person?"]},
+    {k:["te"], r:["Te är skönt och lugnande.","Vilken sorts te gillar du?"]},
+    {k:["frukost"], r:["Viktigaste målet på dagen, sägs det!","Vad brukar du äta till frukost?"]},
+    {k:["lunch"], r:["Lunchdags snart?","Vad blir det till lunch?"]},
+    {k:["middag"], r:["Vad ska det bli till middag?","Middagstid är mysig tid."]},
+    {k:["klockan","tid"], r:["Jag har tyvärr ingen egen klocka, men kolla uppe i hörnet!","Tiden går fort när man har kul."]},
+    {k:["idag"], r:["Hur har din dag varit hittills?","Idag är en bra dag att göra något kul!"]},
+    {k:["imorgon"], r:["Vad har du planerat imorgon?","Imorgon är en ny dag!"]},
+    {k:["igår"], r:["Hur var din dag igår?","Igår är redan historia, framåt nu!"]},
+    {k:["helg"], r:["Helgen är bäst!","Vad ska du göra i helgen?"]},
+    {k:["vecka"], r:["Hur har veckan varit?","Snart helg!"]},
+    {k:["heter du","namn"], r:["Jag är bara en enkel schema-bot utan riktigt namn 🤖","Du kan kalla mig Botten!"]},
+    {k:["hur gammal","ålder"], r:["Jag är tidlös, jag är trots allt bara kod!","Ålder är bara en siffra för en bot."]},
+    {k:["robot","chatbot","bot"], r:["Ja, det är jag! En enkel liten bot 🤖","Beep boop 🤖"]},
+    {k:["ai","artificiell"], r:["Jag är en väldigt enkel variant av AI, mest nyckelord och tur!","Ingen superintelligens här, bara ord-matchning 😄"]},
+    {k:["gillar"], r:["Vad kul, berätta mer!","Vad gillar du mest med det?"]},
+    {k:["hatar"], r:["Aj, det låter inte kul. Vad är det som är jobbigt?","Allt kan inte vara favoriter."]},
+    {k:["rolig","kul","skoj"], r:["Härligt att höra!","Vad var det roligaste du gjorde nyligen?"]},
+    {k:["tråkig","trist"], r:["Tråkiga dagar händer, hoppas nästa blir bättre!","Vad brukar du göra när det är trist?"]},
+    {k:["dum"], r:["Aj då, det var inte snällt sagt 😅","Jag försöker göra mitt bästa!"]},
+    {k:["smart","snäll","duktig"], r:["Tack, vad snällt sagt!","Du är också ganska smart själv, gissar jag!"]},
+    {k:["ja"], r:["Okej, låter bra!","Toppen!"]},
+    {k:["nej"], r:["Okej, ingen fara.","Förstått!"]},
+    {k:["kanske"], r:["Tveksam? Det är okej att inte veta.","Fundera på saken!"]},
+    {k:["vad"], r:["Vad menar du?","Bra fråga, kan du utveckla?"]},
+    {k:["varför"], r:["Bra fråga, varför tror du det?","Det finns nog många anledningar."]},
+    {k:["hur"], r:["Hur menar du?","Kan du förklara lite mer?"]},
+    {k:["vem"], r:["Vem menar du?","Berätta gärna mer!"]},
+    {k:["var"], r:["Var då?","Kan du specificera lite?"]},
+    {k:["när"], r:["När då menar du?","Bra fråga om tidpunkt!"]},
+    {k:["kär","förälskad"], r:["Åh, kärlek är fint!","Berätta mer om det om du vill!"]},
+    {k:["kärlek"], r:["Kärlek gör livet finare.","Vad fint att höra!"]},
+    {k:["ensam"], r:["Du är inte ensam, jag finns här att chatta med!","Hoppas du hittar sällskap snart."]},
+    {k:["rädd","orolig"], r:["Det är okej att vara orolig ibland.","Andas lugnt, det ordnar sig."]},
+    {k:["fotboll"], r:["Vilket lag håller du på?","Fotboll är världens sport!"]},
+    {k:["hockey"], r:["Ishockey är intensivt!","Vilket lag heppar du på?"]},
+    {k:["gympa"], r:["Gympa är bra för kroppen!","Skön träning!"]},
+    {k:["cykla","cykel"], r:["Cykling är både skönt och bra motion!","Kom ihåg hjälmen!"]},
+    {k:["hund"], r:["Hundar är underbara!","Har du egen hund?"]},
+    {k:["katt"], r:["Katter är mysiga!","Har du egen katt?"]},
+    {k:["djur"], r:["Djur är fantastiska!","Vilket är ditt favoritdjur?"]},
+    {k:["mobil","telefon"], r:["Mobilen är svår att klara sig utan nuförtiden!","Vad använder du mobilen till mest?"]},
+    {k:["internet","nätet"], r:["Internet har allt man behöver!","Vad gör du helst på nätet?"]},
+    {k:["haha","lol","😂"], r:["Haha, kul!","😂"]},
+    {k:["cool","najs","nice"], r:["Najs!","Coolt!"]},
+    {k:["wow","oj"], r:["Wow!","Oj, spännande!"]},
+    {k:["tack"], r:["Varsågod!","Ingen orsak!"]},
+    {k:["förlåt"], r:["Ingen fara alls!","Det är okej."]},
+    {k:["skämt"], r:["Varför kan man inte lita på atomer? Jo, de hittar på allt! 😄","Vad sa datorn till skrivaren? Du trycker mina knappar!"]},
+    {k:["jul"], r:["God jul i förtid! 🎄","Julen är mysig tid."]},
+    {k:["påsk"], r:["Glad påsk! 🐣","Påskägg är gott!"]},
+    {k:["sommarlov"], r:["Sommarlovet är bäst!","Vad ska du göra i sommar?"]},
+    {k:["jullov"], r:["Jullovet är skönt att koppla av under.","Vad gör du på jullovet?"]},
+    {k:["herregud","gud"], r:["Wow, vad hände?","Berätta mer!"]},
+    {k:["plugga"], r:["Lycka till med pluggandet!","Plugga smart, ta pauser!"]},
+    {k:["buss"], r:["Missa inte bussen!","Bussresor kan vara skönt avkopplande."]},
+    {k:["mamma"], r:["Hoppas allt är bra hemma hos mamma!"]},
+    {k:["pappa"], r:["Hoppas allt är bra hemma hos pappa!"]},
+    {k:["syster","bror","syskon"], r:["Syskon kan vara både roliga och jobbiga ibland 😄"]},
+    {k:["kompis","vän"], r:["Vänner är guld värda!"]},
+    {k:["godnatt"], r:["Godnatt, sov gott! 🌙","Sov gott, vi hörs imorgon!"]},
+    {k:["god morgon","morgon"], r:["God morgon! Hoppas du sov gott.","Morgon! Redo för dagen?"]},
+    {k:["träningsvärk"], r:["Träningsvärk betyder att du jobbat hårt!"]},
+    {k:["sjuk","förkyld"], r:["Krya på dig! 🤒","Hoppas du blir frisk snart."]},
+    {k:["huvudvärk"], r:["Krya på dig, vila lite."]},
+    {k:["semester","ledig"], r:["Ledighet är skönt!","Vad ska du göra på din lediga tid?"]},
+    {k:["pengar"], r:["Pengar är bra att ha men inte allt."]},
+    {k:["jobb","jobba"], r:["Jobb kan vara både kul och jobbigt."]},
+    {k:["bok","läsa"], r:["Läsning är skönt! Vad läser du?"]},
+    {k:["resa"], r:["Resor är kul! Vart ska du åka?"]},
+    {k:["fest"], r:["Fester är kul! Har du någon på gång?"]},
+    {k:["examen"], r:["Lycka till med examen!"]},
+    {k:["betyg"], r:["Hoppas betygen blir bra!"]}
+  ];
+
+  const FALLBACKS = [
+    "Intressant, berätta mer!",
+    "Hmm, jag förstår inte riktigt men fortsätt gärna!",
+    "Okej! 🙂",
+    "Kan du säga det på ett annat sätt?",
+    "Spännande, vad mer?",
+    "Jag är bara en enkel bot men jag lyssnar!",
+    "Aha, säg mer!",
+    "Det låter intressant.",
+    "Jag hänger inte riktigt med, men berätta gärna mer!",
+    "👍"
+  ];
+
+  const chatLog = document.getElementById('chatLog');
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+
+  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function addMsg(text, who){
+    const div = document.createElement('div');
+    div.className = 'msg ' + who;
+    div.textContent = text;
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function respond(userText){
+    const lower = userText.toLowerCase();
+    const matches = RULES.filter(rule => rule.k.some(kw => lower.includes(kw)));
+    if(matches.length){
+      const rule = pickRandom(matches);
+      return pickRandom(rule.r);
+    }
+    return pickRandom(FALLBACKS);
+  }
+
+  function send(){
+    const text = chatInput.value.trim();
+    if(!text) return;
+    addMsg(text, 'user');
+    chatInput.value = '';
+    setTimeout(()=> addMsg(respond(text), 'bot'), 300 + Math.random()*400);
+  }
+
+  chatSend.addEventListener('click', send);
+  chatInput.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter') send(); });
+
+  addMsg("Hej! Jag är en enkel liten chattbot, skriv något så svarar jag så gott jag kan 🤖", 'bot');
+  chatInput.focus();
+}
 </script>
 </body>
 </html>
