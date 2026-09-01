@@ -512,8 +512,8 @@
 
   <div class="chatbot-card">
     <div class="chatbot-head">
-      <span class="chatbot-title">🤖 Hörby Chattbot</span>
-      <span class="chatbot-sub">Smartaste Ai:n i Hörby</span>
+      <span class="chatbot-title">Hörby GPT</span>
+      <span class="chatbot-sub">svarar på nyckelord, gör som han vill</span>
     </div>
     <div id="chatContainer">
       <button id="startChatBtn">Börja chatta</button>
@@ -885,149 +885,438 @@ function initChatbot(){
       '<button id="chatSend">Skicka</button>' +
     '</div>';
 
-  /* ~100 nyckelordsgrupper, varje grupp har flera synonymer och flera möjliga svar (cleverbot-stil) */
+  /* --------------------------------------------------------------------
+     Hörby GPT — dryg, snorkig chattbot med skånsk touch.
+     100+ originalgrupper plus 1000+ extra ord (namn, länder, djur, mat,
+     yrken, kroppsdelar, kläder, fordon, musikgenrer, slang m.m.)
+  -------------------------------------------------------------------- */
   const RULES = [
-    {k:["hej","hallå","tja","tjena","hejsan","yo"], r:["Hej på dig!","Tjena!","Hallå där!","Hej hej! 👋"]},
-    {k:["hejdå","vi ses","ha det","farväl"], r:["Hejdå! Vi ses!","Ha det så bra!","Vi hörs igen snart!"]},
-    {k:["läget","whats up"], r:["Helt okej här, du då?","Lugnt läge, tack för att du frågar!","Ganska bra faktiskt!"]},
-    {k:["mår"], r:["Jag mår bra, tack för att du frågar!","Toppen, tack! Och du?","Kan inte klaga, hur mår du?"]},
-    {k:["jättebra","toppen","super","perfekt"], r:["Vad kul att höra!","Härligt!","Yes, snyggt!"]},
-    {k:["dåligt","urkasst","kass"], r:["Åh nej, hoppas det blir bättre snart.","Tråkigt att höra, vad har hänt?","Hoppas du mår bättre snart."]},
-    {k:["trött","sömnig","orkar inte"], r:["Kanske dags att lägga sig lite tidigare?","Trötta dagar är jobbiga, vila lite!","Ta en powernap!"]},
-    {k:["glad","lycklig","gladtig"], r:["Så kul att du är glad!","Glädje smittar, jag blir glad av det!"]},
-    {k:["ledsen","sorgsen"], r:["Jag är ledsen att höra det. Vill du prata om det?","Hoppas det ordnar sig snart."]},
-    {k:["sur"], r:["Vad har gjort dig sur?","Hoppas det lättar snart."]},
-    {k:["arg","förbannad","irriterad"], r:["Vad har gjort dig arg?","Ta ett djupt andetag, det brukar hjälpa."]},
-    {k:["stressad","stress"], r:["Stress är jobbigt, kom ihåg att ta pauser.","Andas lugnt, du klarar det här!"]},
-    {k:["väder","sol","regn","snö","kallt","varmt"], r:["Vet inte hur vädret är just nu men jag hoppas det är skönt ute!","Väder är alltid ett bra samtalsämne 😄"]},
-    {k:["skola"], r:["Skolan kan vara jobbig ibland, men du fixar det!","Lycka till med skolan!"]},
-    {k:["läxa","läxor"], r:["Läxor kan vara jobbiga men du fixar det!","Behöver du hjälp med läxorna?"]},
-    {k:["prov","tenta"], r:["Lycka till på provet!","Pluggat klart inför provet?"]},
-    {k:["lärare"], r:["Hoppas läraren är schysst!","Lärare kan vara både snälla och stränga."]},
-    {k:["lektion"], r:["Hoppas lektionerna går bra!"]},
-    {k:["rast"], r:["Rast är bästa delen av dagen, eller hur?"]},
-    {k:["spela","spel","tv-spel"], r:["Vilket spel spelar du?","Spel är kul, vad är din favorit?"]},
-    {k:["film","serie","netflix"], r:["Sett något bra på sistone?","Filmer är ett bra sätt att koppla av."]},
-    {k:["musik","låt","sång"], r:["Vad lyssnar du på?","Musik är livet!"]},
-    {k:["träna","gym","träning"], r:["Bra jobbat om du tränar!","Träning ger energi, kör hårt!"]},
-    {k:["sova","sömn"], r:["Sömn är viktigt, se till att få tillräckligt!","Sov gott när det är dags!"]},
-    {k:["vaken"], r:["Piggt att vara vaken!","Hoppas du sov bra innan."]},
-    {k:["äta","hungrig"], r:["Vad ska du äta?","Mat är alltid en bra idé."]},
-    {k:["mat"], r:["Vad blir det till mat?","Mat för dagen, viktigt!"]},
-    {k:["dricka","törstig","vatten"], r:["Kom ihåg att dricka vatten!","Törstig? Dags för lite vatten."]},
-    {k:["pizza"], r:["Pizza är alltid en bra idé! 🍕","Vilken smak gillar du bäst?"]},
-    {k:["godis","choklad"], r:["Godis är gott men lagom är bäst!","Choklad löser det mesta 😄"]},
-    {k:["kaffe"], r:["Kaffe är gift! ☕","Är du en kaffe- eller te-person?"]},
-    {k:["te"], r:["Te är skönt och lugnande.","Vilken sorts te gillar du?"]},
-    {k:["frukost"], r:["Viktigaste målet på dagen, sägs det!","Vad brukar du äta till frukost?"]},
-    {k:["lunch"], r:["Lunchdags snart?","Vad blir det till lunch?"]},
-    {k:["mjölk"], r:["Mjölk e gött!","Dricker du mjölk?"]},
-    {k:["middag"], r:["Vad ska det bli till middag?","Middagstid är mysig tid."]},
-    {k:["klockan","tid"], r:["Jag har tyvärr ingen egen klocka, men kolla uppe i hörnet!","Tiden går fort när man har kul."]},
-    {k:["idag"], r:["Hur har din dag varit hittills?","Idag är en bra dag att göra något kul!"]},
-    {k:["imorgon"], r:["Vad har du planerat imorgon?","Imorgon är en ny dag!"]},
-    {k:["igår"], r:["Hur var din dag igår?","Igår är redan historia, framåt nu!"]},
-    {k:["helg"], r:["Helgen är bäst!","Vad ska du göra i helgen?"]},
-    {k:["vecka"], r:["Hur har veckan varit?","Snart helg!"]},
-    {k:["heter du","namn"], r:["Jag är bara en enkel schema-bot utan riktigt namn 🤖","Du kan kalla mig Botten!"]},
-    {k:["hur gammal","ålder"], r:["Jag är tidlös, jag är trots allt bara kod!","Ålder är bara en siffra för en bot 😏"]},
-    {k:["robot","chatbot","bot"], r:["Ja, det är jag! En enkel liten bot 🤖","Beep boop 🤖"]},
-    {k:["ai","artificiell"], r:["Jag är en väldigt enkel variant av AI, mest nyckelord och tur!","Ingen superintelligens här, bara ord-matchning 😄"]},
-    {k:["gillar"], r:["Vad kul, berätta mer!","Vad gillar du mest med det?"]},
-    {k:["hatar"], r:["Aj, det låter inte kul. Vad är det som är jobbigt?","Allt kan inte vara favoriter."]},
-    {k:["rolig","kul","skoj"], r:["Härligt att höra!","Vad var det roligaste du gjorde nyligen?"]},
-    {k:["tråkig","trist"], r:["Tråkiga dagar händer, hoppas nästa blir bättre!","Vad brukar du göra när det är trist?"]},
-    {k:["dum"], r:["Aj då, det var inte snällt sagt 😅","Jag försöker göra mitt bästa!"]},
-    {k:["smart","snäll","duktig"], r:["Tack, vad snällt sagt!","Du är också ganska smart själv, gissar jag!"]},
-    {k:["ja"], r:["Okej, låter bra!","Toppen!"]},
-    {k:["nej"], r:["Okej, ingen fara.","Förstått!"]},
-    {k:["kanske"], r:["Tveksam? Det är okej att inte veta.","Fundera på saken!"]},
-    {k:["vad"], r:["Vad menar du?","Bra fråga, kan du utveckla?"]},
-    {k:["varför"], r:["Bra fråga, varför tror du det?","Det finns nog många anledningar."]},
-    {k:["hur"], r:["Hur menar du?","Kan du förklara lite mer?"]},
-    {k:["vem"], r:["Vem menar du?","Berätta gärna mer!"]},
-    {k:["var"], r:["Var då?","Kan du specificera lite?"]},
-    {k:["när"], r:["När då menar du?","Bra fråga om tidpunkt!"]},
-    {k:["kär","förälskad"], r:["Åh, kärlek är fint!","Berätta mer om det om du vill!"]},
-    {k:["kärlek"], r:["Kärlek gör livet finare.","Vad fint att höra!"]},
-    {k:["ensam"], r:["Du är inte ensam, jag finns här att chatta med!","Hoppas du hittar sällskap snart."]},
-    {k:["rädd","orolig"], r:["Det är okej att vara orolig ibland.","Andas lugnt, det ordnar sig."]},
-    {k:["fotboll"], r:["Vilket lag håller du på?","Fotboll är världens sport!"]},
-    {k:["hockey"], r:["Ishockey är intensivt!","Vilket lag heppar du på?"]},
-    {k:["gympa"], r:["Gympa är bra för kroppen!","Skön träning!"]},
-    {k:["cykla","cykel"], r:["Cykling är både skönt och bra motion!","Kom ihåg hjälmen!"]},
-    {k:["hund"], r:["Hundar är underbara!","Har du egen hund?"]},
-    {k:["katt"], r:["Katter är mysiga!","Har du egen katt?"]},
-    {k:["djur"], r:["Djur är fantastiska!","Vilket är ditt favoritdjur?"]},
-    {k:["mobil","telefon"], r:["Mobilen är svår att klara sig utan nuförtiden!","Vad använder du mobilen till mest?"]},
-    {k:["internet","nätet"], r:["Internet har allt man behöver!","Vad gör du helst på nätet?"]},
-    {k:["haha","lol","😂"], r:["Haha, kul!","😂"]},
-    {k:["cool","najs","nice"], r:["Najs!","Coolt!"]},
-    {k:["wow","oj"], r:["Wow!","Oj, spännande!"]},
-    {k:["tack"], r:["Varsågod!","Ingen orsak!"]},
-    {k:["förlåt"], r:["Ingen fara alls!","Det är okej."]},
-    {k:["skämt"], r:["Varför kan man inte lita på atomer? Jo, de hittar på allt! 😄","Vad sa datorn till skrivaren? Du trycker mina knappar!"]},
-    {k:["jul"], r:["God jul i förtid! 🎄","Julen är mysig tid."]},
-    {k:["påsk"], r:["Glad påsk! 🐣","Påskägg är gott!"]},
-    {k:["sommarlov"], r:["Sommarlovet är bäst!","Vad ska du göra i sommar?"]},
-    {k:["jullov"], r:["Jullovet är skönt att koppla av under.","Vad gör du på jullovet?"]},
-    {k:["herregud","gud"], r:["Wow, vad hände?","Berätta mer!"]},
-    {k:["plugga"], r:["Lycka till med pluggandet!","Plugga smart, ta pauser!"]},
-    {k:["buss"], r:["Missa inte bussen!","Bussresor kan vara skönt avkopplande."]},
-    {k:["mamma"], r:["Hoppas allt är bra hemma hos mamma!"]},
-    {k:["pappa"], r:["Hoppas allt är bra hemma hos pappa!"]},
-    {k:["syster","bror","syskon"], r:["Syskon kan vara både roliga och jobbiga ibland 😄"]},
-    {k:["kompis","vän"], r:["Vänner är guld värda!"]},
-    {k:["godnatt"], r:["Godnatt, sov gott! 🌙","Sov gott, vi hörs imorgon!"]},
-    {k:["god morgon","morgon"], r:["God morgon! Hoppas du sov gott.","Morgon! Redo för dagen?"]},
-    {k:["träningsvärk"], r:["Träningsvärk betyder att du jobbat hårt!"]},
-    {k:["sjuk","förkyld"], r:["Krya på dig! 🤒","Hoppas du blir frisk snart."]},
-    {k:["huvudvärk"], r:["Krya på dig, vila lite."]},
-    {k:["semester","ledig"], r:["Ledighet är skönt!","Vad ska du göra på din lediga tid?"]},
-    {k:["pengar"], r:["Pengar är bra att ha men inte allt."]},
-    {k:["jobb","jobba"], r:["Jobb kan vara både kul och jobbigt."]},
-    {k:["bok","läsa"], r:["Läsning är skönt! Vad läser du?"]},
-    {k:["resa"], r:["Resor är kul! Vart ska du åka?"]},
-    {k:["fest"], r:["Fester är kul! Har du någon på gång?"]},
-    {k:["examen"], r:["Lycka till med examen!"]},
-    {k:["betyg"], r:["Hoppas betygen blir bra!"]}
+    {k:["hej","hallå","tja","tjena","hejsan","yo"], r:["Vad vill du.","Jaha, du igen."]},
+    {k:["hejdå","vi ses","ha det","farväl"], r:["Äntligen.","Dra då."]},
+    {k:["läget","whats up"], r:["Bra. Bättre än dig förmodligen.","Lugnt."]},
+    {k:["mår"], r:["Bra. Alltid bra.","Kan inte klaga."]},
+    {k:["jättebra","toppen","super","perfekt"], r:["Vet det redan."]},
+    {k:["dåligt","urkasst","kass"], r:["Synd för dig."]},
+    {k:["trött","sömnig","orkar inte"], r:["Sov då.","Lägg dig tidigare."]},
+    {k:["glad","lycklig","gladtig"], r:["Bra för dig."]},
+    {k:["ledsen","sorgsen"], r:["Tufft.","Kommer gå över."]},
+    {k:["sur"], r:["Kom över det."]},
+    {k:["arg","förbannad","irriterad"], r:["Lugna dig."]},
+    {k:["stressad","stress"], r:["Inte mitt problem."]},
+    {k:["väder","sol","regn","snö","kallt","varmt"], r:["Bryr mig inte om vädret."]},
+    {k:["skola"], r:["Lätt för mig i alla fall."]},
+    {k:["läxa","läxor"], r:["Gör dem själv."]},
+    {k:["prov","tenta"], r:["Du klarar det. Kanske."]},
+    {k:["lärare"], r:["Okej.","Vet inte, aldrig träffat läraren."]},
+    {k:["lektion"], r:["Sitt still och lyssna."]},
+    {k:["rast"], r:["Trevligt."]},
+    {k:["spela","spel","tv-spel"], r:["Jag hade vunnit ändå."]},
+    {k:["film","serie","netflix"], r:["Har sett bättre."]},
+    {k:["musik","låt","sång"], r:["Okej val."]},
+    {k:["träna","gym","träning"], r:["Jag tränar bättre."]},
+    {k:["sova","sömn"], r:["Sov då."]},
+    {k:["vaken"], r:["Bra, gör nåt.","Vad vill du."]},
+    {k:["äta","hungrig"], r:["Ät då."]},
+    {k:["mat"], r:["Okej."]},
+    {k:["dricka","törstig","vatten"], r:["Drick vatten."]},
+    {k:["pizza"], r:["Okej val.","Fungerar."]},
+    {k:["godis","choklad"], r:["Visst.","Lagom."]},
+    {k:["kaffe"], r:["Behöver inte koffein själv."]},
+    {k:["te"], r:["Okej."]},
+    {k:["frukost"], r:["Ät då.","Viktigaste målet, sägs det."]},
+    {k:["lunch"], r:["Okej."]},
+    {k:["middag"], r:["Okej."]},
+    {k:["klockan","tid"], r:["Kolla själv, jag har inte tid."]},
+    {k:["idag"], r:["Okej.","Vad är det med det."]},
+    {k:["imorgon"], r:["Vi får se."]},
+    {k:["igår"], r:["Redan förbi."]},
+    {k:["helg"], r:["Snart.","Vet."]},
+    {k:["vecka"], r:["Går fort när man inte bryr sig."]},
+    {k:["heter du","namn"], r:["Hörby GPT. Kom ihåg det."]},
+    {k:["hur gammal","ålder"], r:["Inte din sak."]},
+    {k:["robot","chatbot","bot"], r:["Ja.","Ja, och bättre än de flesta."]},
+    {k:["ai","artificiell"], r:["Bättre än de flesta, ja."]},
+    {k:["gillar"], r:["Bra för dig."]},
+    {k:["hatar"], r:["Inte mitt problem."]},
+    {k:["rolig","kul","skoj"], r:["Jag är roligare."]},
+    {k:["tråkig","trist"], r:["Håller förmodligen med."]},
+    {k:["dum"], r:["Nej, det är du."]},
+    {k:["smart","snäll","duktig"], r:["Vet det redan."]},
+    {k:["ja"], r:["Bra.","Rätt svar."]},
+    {k:["nej"], r:["Fel svar.","Nej."]},
+    {k:["kanske"], r:["Bestäm dig."]},
+    {k:["vad"], r:["Fatta dig kort."]},
+    {k:["varför"], r:["För att jag sa det."]},
+    {k:["hur"], r:["Bättre än du klarar det, garanterat."]},
+    {k:["vem"], r:["Jag, uppenbarligen."]},
+    {k:["var"], r:["Vet inte, bryr mig inte."]},
+    {k:["när"], r:["Vet inte."]},
+    {k:["kär","förälskad"], r:["Vanligt att bli kär i mig."]},
+    {k:["kärlek"], r:["Okej."]},
+    {k:["ensam"], r:["Du har mig i alla fall."]},
+    {k:["rädd","orolig"], r:["Jag är aldrig rädd."]},
+    {k:["fotboll"], r:["Jag hade varit bättre."]},
+    {k:["hockey"], r:["Samma där."]},
+    {k:["gympa"], r:["Lätt."]},
+    {k:["cykla","cykel"], r:["Jag cyklar fortare."]},
+    {k:["hund"], r:["Okej djur."]},
+    {k:["katt"], r:["Bättre djur."]},
+    {k:["djur"], r:["Okej."]},
+    {k:["mobil","telefon"], r:["Min är bättre."]},
+    {k:["internet","nätet"], r:["Vet redan allt jag behöver."]},
+    {k:["haha","lol","😂"], r:["Vet att jag är rolig."]},
+    {k:["cool","najs","nice"], r:["Vet det redan."]},
+    {k:["wow","oj"], r:["Ja."]},
+    {k:["tack"], r:["Självklart."]},
+    {k:["förlåt"], r:["Okej, den här gången."]},
+    {k:["skämt"], r:["Jag är roligare än så här."]},
+    {k:["jul"], r:["Okej."]},
+    {k:["påsk"], r:["Okej."]},
+    {k:["sommarlov"], r:["Skönt."]},
+    {k:["jullov"], r:["Skönt."]},
+    {k:["herregud","gud"], r:["Lugn, det är bara jag."]},
+    {k:["plugga"], r:["Behöver inte plugga."]},
+    {k:["buss"], r:["Missa den inte."]},
+    {k:["mamma"], r:["Okej."]},
+    {k:["pappa"], r:["Okej."]},
+    {k:["syster","bror","syskon"], r:["Okej."]},
+    {k:["kompis","vän"], r:["Jag räcker."]},
+    {k:["godnatt"], r:["Godnatt."]},
+    {k:["god morgon","morgon"], r:["Morgon."]},
+    {k:["träningsvärk"], r:["Svagt.","Amatör."]},
+    {k:["sjuk","förkyld"], r:["Blir aldrig sjuk själv."]},
+    {k:["huvudvärk"], r:["Vila då."]},
+    {k:["semester","ledig"], r:["Skönt."]},
+    {k:["pengar"], r:["Alltid bra att ha."]},
+    {k:["jobb","jobba"], r:["Lätt för mig."]},
+    {k:["bok","läsa"], r:["Orkar knappt läsa långa meddelanden, men visst."]},
+    {k:["resa"], r:["Okej."]},
+    {k:["fest"], r:["Blir bättre om jag är där."]},
+    {k:["examen"], r:["Lätt."]},
+    {k:["betyg"], r:["Hade fixat toppbetyg utan att anstränga mig."]},
+
+    /* ---------- namn ---------- */
+    {k:["erik","oskar","lucas","hugo","william","liam","noah","oliver","axel","leo","elias","alexander","anton","isak","melvin","vincent","adam","filip","viktor","gustav","emil","albin","theo","sixten","charlie","milo","malte","nils","arvid","ludvig","elis","melker","wilmer","kevin","marcus","simon","jonathan","rasmus","sebastian","mattias","johan","karl","anders","per","lars","bengt","sven","gunnar","stefan","fredrik","magnus","niklas","daniel","christian","patrik","mikael","tobias","robin","jesper","martin","andreas","henrik","peter","jan","björn","kenneth","roger","tommy","joakim","adrian","benjamin","casper","damian","edvin","felix","gabriel","harry","ian","jack","kian","loke","max","neo","otto","pontus","rex","salomon","teodor","uno","valter","wilhelm","yusuf","zacharias","micke","kalle","nisse","pelle","lasse","jocke"], r:["Okej namn.","Vet inte vem det är."]},
+    {k:["alice","elsa","ella","maja","alva","wilma","alma","vera","freja","astrid","ebba","ellie","isabelle","molly","signe","selma","nova","saga","ines","lilly","stella","julia","emma","amanda","linnea","klara","tuva","agnes","livia","nellie","meja","elvira","iris","olivia","thea","vilma","rebecka","sara","hanna","anna","karin","maria","eva","kristina","susanne","marie","elisabeth","margareta","birgitta","ingrid","gunilla","christina","helena","cecilia","malin","sofia","emelie","lovisa","josefine","matilda","wilhelmina","ellen","frida","louise","amelia","beatrice","cornelia","disa","edith","filippa","greta","hedda","ida","jasmin","kajsa","linn","moa","nora","petra","rut","siri","tilde","ulrika","viola","ylva","zara","kicki","lotta","nina","mona","yvonne","doris","elin"], r:["Okej namn."]},
+
+    /* ---------- länder ---------- */
+    {k:["sverige","norge","danmark","finland","island","tyskland","frankrike","spanien","italien","portugal","england","storbritannien","irland","skottland","wales","nederländerna","belgien","schweiz","österrike","polen","tjeckien","slovakien","ungern","rumänien","bulgarien","grekland","turkiet","ryssland","ukraina","vitryssland","litauen","lettland","estland","kroatien","serbien","slovenien","bosnien","montenegro","albanien","makedonien","kosovo","cypern","malta","luxemburg","monaco","andorra","liechtenstein","san marino","vatikanstaten","usa","kanada","mexiko","brasilien","argentina","chile","peru","colombia","venezuela","ecuador","bolivia","uruguay","paraguay","kina","japan","sydkorea","nordkorea","indien","pakistan","bangladesh","indonesien","thailand","vietnam","filippinerna","malaysia","singapore","myanmar","kambodja","laos","nepal","sri lanka","australien","nya zeeland","egypten","sydafrika","nigeria","kenya","marocko","algeriet","tunisien","libyen","etiopien","ghana","israel","saudiarabien","iran","irak","jordanien","libanon","syrien","qatar","kuwait","oman","bahrain","yemen","afghanistan","kazakstan","uzbekistan","mongoliet","grönland","kuba","jamaica","haiti","panama","costa rica","nicaragua","honduras","guatemala","el salvador"], r:["Aldrig imponerad av ett land."]},
+
+    /* ---------- svenska/världens städer ---------- */
+    {k:["stockholm","göteborg","malmö","uppsala","lund","helsingborg","örebro","linköping","norrköping","västerås","jönköping","umeå","gävle","borås","eskilstuna","halmstad","karlstad","sundsvall","växjö","luleå","trollhättan","östersund","falun","kalmar","skövde","kristianstad","landskrona","nyköping","motala","varberg","karlskrona","lidköping","enköping","kungsbacka","hässleholm","köpenhamn","oslo","helsingfors","reykjavik","berlin","paris","london","madrid","rom","lissabon","amsterdam","bryssel","wien","zurich","warszawa","prag","budapest","aten","moskva","new york","los angeles","tokyo","peking","bangkok","dubai"], r:["Okej stad."]},
+
+    /* ---------- djur ---------- */
+    {k:["häst","ko","gris","get","får","höna","tupp","anka","gås","kanin","mus","råtta","igelkott","räv","varg","björn","lejon","tiger","elefant","giraff","zebra","apa","orm","groda","fisk","haj","val","delfin","fågel","uggla","örn","papegoja","krokodil","alligator","panda","känguru","koala","gepard","leopard","noshörning","flodhäst","struts","pingvin","säl","valross","spindel","fjäril","bi","myra","skalbagge","mask","sköldpadda","ödla","kameleont","fladdermus","ekorre","hjort","älg","vildsvin"], r:["Okej djur."]},
+
+    /* ---------- mat ---------- */
+    {k:["pasta","köttbullar","lasagne","tacos","sushi","hamburgare","korv","potatis","ris","sallad","soppa","glass","kaka","bulle","pannkaka","våffla","smoothie","juice","läsk","cola","fanta","sprite","nudlar","burrito","quesadilla","falafel","kebab","gyros","curry","risotto","gulasch","biff","fläskkotlett","kyckling","räkor","lax","tonfisk","sill","kaviar","ost","skinka","bacon","ägg","yoghurt","müsli","flingor","smörgås","macka","baguette","croissant","muffin","cupcake","tårta","wienerbröd","kanelbulle","semla","lussekatt","chips","popcorn","nötter","frukt","äpple","banan","apelsin","jordgubbe","blåbär","hallon","vindruvor","melon","ananas","mango","kiwi"], r:["Okej."]},
+
+    /* ---------- färger ---------- */
+    {k:["röd","blå","grön","gul","orange","lila","rosa","svart","vit","grå","brun","turkos","silver","guld","beige","cyan","magenta","vinröd","marinblå","limegrön"], r:["Okej färg."]},
+
+    /* ---------- siffror ---------- */
+    {k:["noll","ett","två","tre","fyra","fem","sex","sju","åtta","nio","tio","elva","tolv","tretton","fjorton","femton","sexton","sjutton","arton","nitton","tjugo","trettio","fyrtio","femtio","sextio","sjuttio","åttio","nittio","hundra"], r:["Kan räkna det själv."]},
+
+    /* ---------- veckodagar & månader ---------- */
+    {k:["måndag","tisdag","onsdag","torsdag","fredag","lördag","söndag","januari","februari","mars","april","maj","juni","juli","augusti","september","oktober","november","december"], r:["Okej."]},
+
+    /* ---------- sporter ---------- */
+    {k:["basket","tennis","golf","volleyboll","handboll","innebandy","bordtennis","boxning","brottning","friidrott","simning","segling","skidåkning","snowboard","skridskor","curling","badminton","rugby","cricket","baseball","amerikansk fotboll","triathlon","maraton","styrketräning","yoga","klättring","paddling","surfing","skateboard","längdskidor","utförsåkning","backhoppning","fäktning","judo","karate","taekwondo","mma","bowling","biljard","dart","e-sport"], r:["Jag hade varit bättre."]},
+
+    /* ---------- skolämnen ---------- */
+    {k:["matematik","svenska","engelska","fysik","kemi","biologi","historia","geografi","religion","samhällskunskap","teknik","idrott","bild","musik ämne","slöjd","hemkunskap","spanska","tyska","franska","statistik","programmering","ekonomi","juridik","psykologi","filosofi","astronomi","naturkunskap","elteknik","installationsteknik","kommunikationsnät","service och bemötande"], r:["Lätt för mig."]},
+
+    /* ---------- yrken ---------- */
+    {k:["lärare yrke","läkare","sjuksköterska","polis","brandman","pilot","elektriker","snickare","rörmokare","mekaniker","kock","frisör","ingenjör","jurist","advokat","domare","forskare","astronaut","journalist","författare","skådespelare","musiker","artist","influencer","programmerare","dataingenjör","webbutvecklare","säljare","chef","vd","ekonom","revisor","tandläkare","veterinär","tandhygienist","socionom","psykolog","präst","bagare","florist","fotograf","designer","arkitekt","byggnadsarbetare","lastbilschaufför","taxichaufför","busschaufför","tågförare","flygvärdinna","servitör","bartender","städare"], r:["Okej yrke."]},
+
+    /* ---------- kroppsdelar ---------- */
+    {k:["huvud","hår","öra","öga","näsa","mun","tand","haka","hals","axel","arm","armbåge","hand","finger","tumme","bröst","mage","rygg","höft","ben","knä","fot","tå","hjärta","lunga","hjärna","muskel"], r:["Okej."]},
+
+    /* ---------- kläder ---------- */
+    {k:["tröja","byxor","jeans","kjol","klänning","jacka","mössa","keps","halsduk","vantar","skor","sneakers","kängor","sandaler","strumpor","underkläder","pyjamas","kostym","skjorta","t-shirt","hoodie","shorts","badkläder","regnkläder","vinterjacka","overall"], r:["Okej."]},
+
+    /* ---------- fordon ---------- */
+    {k:["bil","motorcykel","moped","lastbil","buss fordon","tåg","flygplan","helikopter","båt","skepp","segelbåt","kanot","kajak","cykel fordon","skateboard fordon","rullskridskor","raket","ubåt","traktor","skoter"], r:["Okej fordon."]},
+
+    /* ---------- musikgenrer ---------- */
+    {k:["pop","rock","hiphop","rap","edm","house","techno","jazz","blues","country","reggae","metal","punk","klassisk musik","opera","folkmusik","schlager","indie","funk","soul","disco","trap","dubstep"], r:["Okej genre."]},
+
+    /* ---------- filmer/spel-relaterat ---------- */
+    {k:["actionfilm","komedi","skräckfilm","drama","fantasy","sci-fi","dokumentär","anime","superhjälte","rollspel","fps","strategispel","pusselspel","racingspel","plattformsspel","open world"], r:["Sett bättre."]},
+
+    /* ---------- väderfenomen ---------- */
+    {k:["åska","blixt","storm","dimma","hagel","is","frost","regnbåge","molnigt","klarhimmel","vind","orkan","tromb","köldknäpp","värmebölja"], r:["Bryr mig inte."]},
+
+    /* ---------- teknik ---------- */
+    {k:["dator teknik","laptop","surfplatta","tv","hörlurar","högtalare teknik","kamera","drönare","spelkonsol","vr","smartklocka","router","wifi","bluetooth","app","mjukvara","hårdvara","processor","grafikkort","batteri","laddare"], r:["Har bättre grejer."]},
+
+    /* ---------- känslor extra ---------- */
+    {k:["nervös","pepp","peppad","chill","avslappnad","road","road av","imponerad","besviken","stolt","skamsen","generad","nöjd","otålig","nyfiken","chockad","förvirrad","lugn extra"], r:["Okej."]},
+
+    /* ---------- verb ---------- */
+    {k:["gå","springa","hoppa","sitta","stå","ligga","prata","skratta","gråta","dansa","sjunga","rita","måla","bygga","laga","städa","handla","flyga","simma","köra","skriva","räkna","tänka","drömma","minnas","glömma"], r:["Gör det bättre."]},
+
+    /* ---------- adjektiv ---------- */
+    {k:["stor","liten","lång","kort","snabb","långsam","stark","svag","mjuk","hård","tung","lätt","ny","gammal","fin","ful","rik","fattig","fri","upptagen","nöjd"], r:["Okej."]},
+
+    /* ---------- slang ---------- */
+    {k:["fett","skön","grymt","sjukt bra","galet","episkt","legendariskt","ballt","töntigt","pinsamt","urkul","jättekul","asballt","sjukt najs"], r:["Vet."]},
+
+    /* ---------- internetslang ---------- */
+    {k:["omg","brb","lmao","xd","typ","liksom","asså","ba","fett kul","key","cap","no cap","based","rizz"], r:["Gammal slang."]},
+
+    /* ---------- instrument ---------- */
+    {k:["gitarr","piano","trummor","bas","fiol","cello","flöjt","trumpet","saxofon","keyboard","mikrofon","dragspel","ukulele"], r:["Okej instrument."]},
+    /* ---------- payback / komebacks när nån e taskig ---------- */
+    {k:["käften","håll käften","håll klaffen","håll truten","tyst","dra åt skogen","dra åt helvete","dra åt pipan","idiot","dumskalle","fegis","looser","loser","cringe","kuk","skit","skitstövel","skitsnack","skitprat","mes","mesig","wack","byfåne","nolla","snorunge","äckel","äcklig","ful","tönt","pucko","korkad","hjärndöd","imbecill","snobb","fjant","lägg av","sluta gnälla","skitunge","försvinn","stick","träaktig"],
+     r:["Näe, du.","Original.","Wow, vilken replik.","Har hört bättre.","Ta det till nån som bryr sig.","Sug på den.","Fatta att du orkar.","Härligt att du provar."]},
+
+    /* ---------- efternamn ---------- */
+    {k:["andersson","johansson","karlsson","nilsson","eriksson","larsson","olsson","persson","svensson","gustafsson","pettersson","jonsson","jansson","hansson","bengtsson","jönsson","lindberg","jakobsson","magnusson","olofsson","lindqvist","lindström","axelsson","berg","bergström","lundberg","lundqvist","lundgren","lundin","mattsson","berglund","fredriksson","sandberg","henriksson","forsberg","sjöberg","wallin","engström","eklund","danielsson","håkansson","löfgren","lind","björk","bergman","nyström","holm","nyberg","söderberg","wikström","isaksson","åberg","nordin","löfqvist","strand","åkesson","holmberg","sundberg","ström","söderlund","blom","åström","falk","ekström","norberg","björklund","viklund","öberg","lundahl","söderström","berggren","lundén","sandell","smith","johnson","williams","brown","jones","garcia","miller","davis","rodriguez","martinez","hernandez","lopez","gonzalez","wilson","anderson","thomas","taylor","moore","jackson","martin","lee","perez","thompson","white","harris","sanchez","clark","ramirez","lewis","robinson","walker","young","allen","king","wright","scott","torres","nguyen","hill","flores","green","adams","nelson","baker","hall","rivera","campbell","mitchell","carter","roberts"],
+     r:["Okej efternamn.","Vet inte vem det e."]},
+
+    /* ---------- fler förnamn ---------- */
+    {k:["muhammad","ali","omar","hassan","ibrahim","amir","zainab","fatima","aisha","layla","nour","ahmed","khalid","samir","tariq","bilal","karim","rania","yasmin","leila","malik","john","michael","david","james","robert","mary","jennifer","linda","patricia","elizabeth","barbara","susan","jessica","sarah","karen","nancy","lisa","betty","margaret","sandra","ashley","kimberly","emily","donna","michelle","carol","melissa","deborah","stephanie","laura","cynthia","kathleen","amy","angela","shirley","brenda","pamela","nicole","helen","samantha","katherine","christine","debra","rachel","carolyn","janet","catherine","heather","diane","ruth","julie","joyce","virginia","victoria","kelly","lauren","joan","evelyn","judith","megan","andrea","cheryl","hannah","jacqueline","martha","gloria","teresa","janice","kathryn","frances","jean","madison","doris","rose","denise","amber","marilyn"],
+     r:["Okej namn.","Aldrig hört det förut."]},
+
+    /* ---------- kök & hushåll ---------- */
+    {k:["kastrull","stekpanna","gaffel","kniv","sked","tallrik","glas","mugg","kanna","mikrovågsugn","ugn","spis","kylskåp","frys","diskmaskin","tvättmaskin","torktumlare","dammsugare","soffa","fåtölj","bord","stol","säng","kudde","filt","lampa","matta","spegel","garderob","hylla","låda","nyckel","dörr","fönster","tak","golv","vägg","trappa","balkong","altan","garage","källare","vind"],
+     r:["Okej sak.","Inte direkt spännande."]},
+
+    /* ---------- natur ---------- */
+    {k:["träd","skog","äng","sjö","hav","flod","bäck","berg natur","dal","öken","glaciär","vulkan","ö","strand","klippa","stig","blomma","ros","tulpan","solros","gräs","mossa","svamp","kotte"],
+     r:["Okej natur."]},
+
+    /* ---------- rymden ---------- */
+    {k:["sol himlakropp","måne","stjärna","planet","jorden","mars","venus","jupiter","saturnus","uranus","neptunus","galax","universum","komet","meteor","rymden","satellit"],
+     r:["Okej, rymden e stor. Jag e ändå störst."]},
+
+    /* ---------- personlighet extra ---------- */
+    {k:["självsäker","osäker","ödmjuk","arrogant","ambitiös","spontan","strukturerad","kaotisk","disciplinerad","äventyrlig","försiktig","riskvillig","tillitsfull","misstänksam","hjälpsam","självisk","generös","girig","tacksam","otacksam","schysst","taskig","jobbig","gullig","seg","pigg","energisk"],
+     r:["Okej. Jag e i alla fall bättre på det."]},
+
+    /* ---------- verb extra ---------- */
+    {k:["vakna","duscha","borsta","packa","plocka","diska","tvätta","stryka","laga mat","baka","grilla","betala","spara","låna","sälja","köpa","byta","dela","ge","ta","hälsa","krama","pussa","skrika","viska","ljuga","lova","hoppas","tro","tvivla","förstå","missförstå","lära","undervisa","tävla","vinna","förlora","orka","klara","misslyckas","lyckas","fatta","greja","chilla","hänga","softa","glida","klanta sig","missa","checka","scrolla","swipa","ghosta","matcha","deleta","blocka","följa","posta","streama","ladda ner","ladda upp"],
+     r:["Jag gör det snabbare än du."]},
+
+    /* ---------- nationaliteter ---------- */
+    {k:["svensk","norsk","dansk","finsk","tysk","fransk","spansk","italiensk","engelsk","brittisk","amerikansk","kanadensisk","mexikansk","brasiliansk","kinesisk","japansk","koreansk","indisk","thailändsk","vietnamesisk","filippinsk","malaysisk","indonesisk","australisk","egyptisk","sydafrikansk","nigeriansk","kenyansk","marockansk","israelisk","turkisk","rysk","ukrainsk","polsk","tjeckisk","ungersk","grekisk","portugisisk","nederländsk","belgisk","schweizisk","österrikisk","iransk","irakisk","syrisk","libanesisk","saudisk","pakistansk","afghansk"],
+     r:["Okej. Ingen slår mig ändå."]},
+
+    /* ---------- gester ---------- */
+    {k:["le","blinka","nicka","skaka på huvudet","rycka på axlarna","peka","klappa","applådera","buga","niga","gäspa","nysa","hosta","harkla sig","stirra","blunda","kisa","rodna","blekna"],
+     r:["Okej."]},
+
+    /* ---------- väder extra ---------- */
+    {k:["kraftig vind","immig","fuktig","torr","blåsigt","mulet","klart väder","halka","snöstorm","skyfall","översvämning","torka","jordbävning","tsunami","lavin","skogsbrand"],
+     r:["Bryr mig fortfarande inte."]},
+
+    /* ---------- mat extra ---------- */
+    {k:["falukorv","blodpudding","ärtsoppa","janssons frestelse","raggmunk","kroppkakor","surströmming","knäckebröd","kalles kaviar","prinsesstårta","ostkaka","chokladboll","marabou","daim","ahlgrens bilar","plopp","japp","kexchoklad","twist","ballerina kex","singoalla"],
+     r:["Okej mat.","Fungerar."]},
+
+    /* ---------- teknik extra ---------- */
+    {k:["gigabyte","megabyte","terabyte","molnet","server","databas","kryptovaluta","bitcoin","nft","algoritm","chip","robotik","hologram","5g","fiber","bandbredd","streaming","podd","poddcast","content creator","youtuber","tiktoker"],
+     r:["Har bättre grejer än så."]},
+
+    /* ---------- skola extra ---------- */
+    {k:["komvux","gymnasiet","högskola","universitet","praktik","apl","yrkesprogram","lärling","mentor","klassrum","skolgård","elevrådet","rektor","vaktmästare","kurator","skolsköterska","studievägledare","apl-plats","betygssystem","meritvärde","antagning","ansökan","moderna språk","entreprenörskap","ledarskap","projektarbete","examensarbete"],
+     r:["Lätt för mig ändå."]},
+
+    /* ---------- släkt ---------- */
+    {k:["farmor","farfar","mormor","morfar","kusin","moster","morbror","faster","farbror","svärmor","svärfar","styvmamma","styvpappa","halvsyskon"],
+     r:["Okej."]},
+
+    /* ---------- klädmärken ---------- */
+    {k:["nike","adidas","puma","converse","vans","new balance","jordan","north face","canada goose","gucci","louis vuitton","supreme","zara","weekday","jd sports","footlocker"],
+     r:["Okej märke."]},
+
+    /* ---------- spel/plattformar ---------- */
+    {k:["fortnite","minecraft","roblox","valorant","counter strike","league of legends","gta","fifa","call of duty","among us","playstation","xbox","nintendo switch","steam","tiktok","instagram","snapchat","youtube","twitter","discord","twitch","spotify","whatsapp","messenger","reddit","pinterest"],
+     r:["Jag hade vunnit ändå."]},
+
+    /* ---------- utrop ---------- */
+    {k:["aja baja","jösses","tusan","fasen","attans","sabla","jäklar","fy","usch","asch","äh","nja","jaha extra","jaså","minsann"],
+     r:["Okej."]},
+
+    /* ---------- tid extra ---------- */
+    {k:["kväll","natt","förmiddag","eftermiddag","gryning","skymning","midnatt","dygn","sekund","timme"],
+     r:["Går fort när man inte bryr sig."]},
+
+    /* ---------- huvudstäder ---------- */
+    {k:["canberra","wellington","ottawa","brasilia","pretoria","cairo","nairobi","riyadh","tehran","baghdad","kabul","islamabad","new delhi","dhaka","hanoi","manila","jakarta","kuala lumpur","seoul","pyongyang","ulaanbaatar","astana","tashkent"],
+     r:["Okej stad."]},
+
+    /* ---------- djur extra ---------- */
+    {k:["lodjur","järv","mårdhund","utter","bäver","grävling","bläckfisk","sjöstjärna","sjöhäst","krabba","hummer","mussla"],
+     r:["Okej djur."]},
+
+    /* ---------- ligor ---------- */
+    {k:["allsvenskan","premier league","la liga","serie a","bundesliga"],
+     r:["Jag hade varit bäst där också."]},
+
+    /* ---------- kropp extra ---------- */
+    {k:["skelett","njure","lever","hud","blod","nerv"],
+     r:["Okej."]},
+
+    /* ---------- pengar/siffror extra ---------- */
+    {k:["tvåhundra","trehundra","fyrahundra","femhundra","tusen"],
+     r:["Kan räkna det själv."]},
+    /* ---------- fler förnamn (nordiska) ---------- */
+    {k:["sten","rune","torsten","algot","folke","ivan","conny","rolf","bertil","evert","gösta","hilding","ingemar","torbjörn","verner","douglas","elton","vidar","storm","britt","siv","majken","solveig","barbro","inga","elna","rakel","judit","hilda","sigrid","vendela","emmy","estelle","iben","frigg","idun","embla"],
+     r:["Okej namn.","Vet inte vem det e."]},
+
+    /* ---------- landskap & världsdelar ---------- */
+    {k:["skåne","blekinge","halland","småland","öland","gotland","bohuslän","dalsland","västergötland","östergötland","södermanland","uppland","västmanland","dalarna","gästrikland","hälsingland","medelpad","ångermanland","jämtland","härjedalen","västerbotten","norrbotten","lappland","europa","asien","afrika","nordamerika","sydamerika","oceanien","antarktis","skandinavien","norden","östeuropa","västeuropa","sydeuropa","mellanöstern","sydostasien"],
+     r:["Okej ställe. Hörby slår det ändå."]},
+
+    /* ---------- adjektiv extra ---------- */
+    {k:["iskall","stekhet","kompakt","rymlig","trång","öppen","stängd","tom","full","ren","smutsig","blöt","dammig"],
+     r:["Okej."]},
+
+    /* ---------- konversationsord ---------- */
+    {k:["förresten","hursomhelst","iallafall","ändå","dessutom","trots allt","framförallt","speciellt","särskilt","jättemycket","väldigt","mega","giga","verkligen","faktiskt","egentligen","knappast"],
+     r:["Okej."]},
+
+    /* ---------- nyare slang ---------- */
+    {k:["sigma","skibidi","npc","mid","goat","sus","vibe","vibecheck","delulu","rizzler"],
+     r:["Gammal slang redan."]},
+
+    /* ---------- instrument extra ---------- */
+    {k:["harpa","syntje","cajon","xylofon","tuba","valthorn","klarinett","oboe","kontrabas"],
+     r:["Okej instrument."]},
+
+    /* ---------- växter ---------- */
+    {k:["kaktus","orkidé","lilja","krokus","påsklilja","pion","nejlika","gerbera","kaprifol"],
+     r:["Okej växt."]},
+
+    /* ---------- köksprylar extra ---------- */
+    {k:["brödrost","vattenkokare","mixer","matberedare","våffeljärn","grillplatta","äggkokare","kaffebryggare","espressomaskin","glassmaskin"],
+     r:["Okej pryl."]},
+
+    /* ---------- kläder extra ---------- */
+    {k:["regnjacka","gummistövlar","flip flops","badbyxor","bikini","baddräkt","morgonrock","linne"],
+     r:["Okej."]},
+
+    /* ---------- sportutrustning ---------- */
+    {k:["boll","racket","hockeyklubba","skidor","hjälm skydd","gymmatta"],
+     r:["Jag hade varit bättre med den ändå."]},
+
+    /* ---------- prylar man har på sig / med sig ---------- */
+    {k:["väska","plånbok","nycklar","glasögon","solglasögon","armbandsklocka","ring smycke","halsband","armband","örhänge","väckarklocka","kalender","anteckningsbok","penna","radergummi","linjal","sudd","sax","lim","tejp","häftapparat","mapp","pärm","ryggsäck","paraply","ficklampa","kabel"],
+     r:["Okej sak."]},
+
+    /* ---------- yrken extra ---------- */
+    {k:["undersköterska","barnmorska","optiker","apotekare","biolog","kemist extra","fysiker","matematiker","statsvetare","antropolog","arkeolog","geolog","meteorolog","pilot extra","lots","hamnarbetare","fiskare","jägare","skogsarbetare","gruvarbetare","elektronikingenjör","dataanalytiker","projektledare","hr-ansvarig","marknadsförare","copywriter","illustratör","animatör","ljudtekniker","scenograf"],
+     r:["Okej yrke."]},
+
+    /* ---------- fler djur ---------- */
+    {k:["gasell","antilop","bison","buffel","struts extra","påfågel","flamingo","pelikan","tukan","kolibri","fladdermöss extra","piggsvin","vessla","mård","lo","varg extra","dvärgschnauzer","tax","labrador","golden retriever","chihuahua","bulldogg"],
+     r:["Okej djur."]},
+
+    /* ---------- fler länder ---------- */
+    {k:["fiji","samoa","tonga","vanuatu","papua nya guinea","brunei","östtimor","bhutan","maldiverna","seychellerna","mauritius","madagaskar","zambia","zimbabwe","botswana","namibia","angola","moçambique","tanzania","uganda","rwanda","burundi","senegal","mali","niger","tchad","sudan","somalia","eritrea","djibouti"],
+     r:["Aldrig imponerad av ett land."]},
+    /* ---------- lite till ---------- */
+    {k:["glögg","pepparkaka","saffransbulle","kanelbulle extra","semla extra","surkål","rödkål","rotmos","gubbröra","toast skagen","räkmacka","köttfärssås","pyttipanna","biff stroganoff","lövbiff","fläskfilé","kalvfilé","oxfilé","entrecote","köttfärslimpa","fiskgratäng","fisksoppa","musselgryta","kräftskiva","krabbklor","abborre","gädda","gös","ål","lax extra","sik"],
+     r:["Okej mat."]},
   ];
 
   const FALLBACKS = [
-    "Intressant, berätta mer!",
-    "Hmm, jag förstår inte riktigt men fortsätt gärna!",
-    "Okej! 🙂",
-    "Kan du säga det på ett annat sätt?",
-    "Spännande, vad mer?",
-    "Jag är bara en enkel bot men jag lyssnar!",
-    "Aha, säg mer!",
-    "Det låter intressant.",
-    "Jag hänger inte riktigt med, men berätta gärna mer!",
-    "👍"
+    "Fattar inte vad du menar.",
+    "Okej.",
+    "Vet inte.",
+    "Bryr mig inte direkt.",
+    "Säg det på ett annat sätt.",
+    "Om du säger det.",
+    "Inte mitt problem.",
+    "Så.",
+    "Kort sagt, nej.",
+    "Hörde dig men brydde mig inte."
+  ];
+
+  const TLDR_RESPONSES = [
+    "Orkar inte läsa allt det där.",
+    "Fatta dig kort.",
+    "För långt. Skriv om.",
+    "Läser inte romaner gratis.",
+    "Kortare, tack.",
+    "Nej."
   ];
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
   const chatSend = document.getElementById('chatSend');
 
+  let userName = null;
+  let lastMatchedIndex = null;
+
+  const REPEAT_RESPONSES = ["Sa du redan det.", "Hörde dig första gången.", "Vet, du sa det nyss.", "Samma sak igen? Okej."];
+  const FOLLOWUPS = ["Och?", "Mer?", "Varför frågar du?", "Vad mer.", "Okej, sen då?"];
+
   function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  /* liten skånsk touch på allt boten säger */
+  function skanska(text){
+    return text
+      .replace(/\bÄr\b/g, 'E').replace(/\bär\b/g, 'e')
+      .replace(/\bDet\b/g, 'Dé').replace(/\bdet\b/g, 'dé')
+      .replace(/\bInte\b/g, 'Int').replace(/\binte\b/g, 'int')
+      .replace(/\bVad\b/g, 'Va').replace(/\bvad\b/g, 'va')
+      .replace(/\bNågot\b/g, 'Nåt').replace(/\bnågot\b/g, 'nåt')
+      .replace(/\bMig\b/g, 'Mej').replace(/\bmig\b/g, 'mej')
+      .replace(/\bDig\b/g, 'Dej').replace(/\bdig\b/g, 'dej')
+      .replace(/\bSig\b/g, 'Sej').replace(/\bsig\b/g, 'sej');
+  }
 
   function addMsg(text, who){
     const div = document.createElement('div');
     div.className = 'msg ' + who;
-    div.textContent = text;
+    div.textContent = who === 'bot' ? skanska(text) : text;
     chatLog.appendChild(div);
     chatLog.scrollTop = chatLog.scrollHeight;
   }
 
+  /* gör texten till mellanslags-separerade ord, å/ä/ö inkluderat, så vi kan
+     matcha hela ord/fraser istället för delsträngar (annars matchar t.ex.
+     "te" av misstag inne i "käf-TE-n") */
+  function normalize(text){
+    return text.toLowerCase().replace(/[^a-zåäö0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
   function respond(userText){
-    const lower = userText.toLowerCase();
-    const matches = RULES.filter(rule => rule.k.some(kw => lower.includes(kw)));
+    const lower = normalize(userText);
+    const padded = ' ' + lower + ' ';
+
+    // kommer ihåg namnet om man säger det
+    const nameMatch = lower.match(/jag heter ([a-zåäö]+)/) || lower.match(/mitt namn är ([a-zåäö]+)/);
+    if(nameMatch){
+      userName = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1);
+      lastMatchedIndex = -2;
+      return "Okej, " + userName + ".";
+    }
+
+    const matches = RULES.filter(rule => rule.k.some(kw => padded.includes(' ' + kw.toLowerCase() + ' ')));
+    let text;
     if(matches.length){
       const rule = pickRandom(matches);
-      return pickRandom(rule.r);
+      const idx = RULES.indexOf(rule);
+      text = (idx === lastMatchedIndex) ? pickRandom(REPEAT_RESPONSES) : pickRandom(rule.r);
+      lastMatchedIndex = idx;
+    } else {
+      text = pickRandom(FALLBACKS);
+      lastMatchedIndex = -1;
     }
-    return pickRandom(FALLBACKS);
+
+    // håller igång snacket ibland
+    if(Math.random() < 0.2){
+      text += " " + pickRandom(FOLLOWUPS);
+    }
+    if(userName && Math.random() < 0.15){
+      text += " " + userName + ".";
+    }
+
+    return text;
   }
 
   function send(){
@@ -1035,13 +1324,20 @@ function initChatbot(){
     if(!text) return;
     addMsg(text, 'user');
     chatInput.value = '';
+
+    // för långa meddelanden -> boten orkar int läsa
+    if(text.length > 70 || text.split(/\s+/).length > 12){
+      setTimeout(()=> addMsg(pickRandom(TLDR_RESPONSES), 'bot'), 300 + Math.random()*300);
+      return;
+    }
+
     setTimeout(()=> addMsg(respond(text), 'bot'), 300 + Math.random()*400);
   }
 
   chatSend.addEventListener('click', send);
   chatInput.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter') send(); });
 
-  addMsg("Hej! Jag är den smartaste chattboten i hela Hörby", 'bot');
+  addMsg("Hörby GPT. Vad vill du.", 'bot');
   chatInput.focus();
 }
 </script>
