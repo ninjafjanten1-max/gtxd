@@ -1482,7 +1482,6 @@ function initChatbot(){
       return "Okej, " + userName + ".";
     }
 
-```html
     // kommandon där nån vill att boten ska göra/skriva/fixa nåt -> ofta bara nej
     if(COMMAND_PATTERN.test(lower) && Math.random() < 0.65){
       lastMatchedIndex = -3;
@@ -1536,34 +1535,5 @@ function initChatbot(){
   chatInput.focus();
 }
 </script>
-
-<!-- DOOM-KNAPP -->
-<a href="doom.html" class="doom-button">PLAY DOOM</a>
-
-<style>
-.doom-button {
-  display: inline-block;
-  margin: 20px;
-  padding: 15px 30px;
-  background: #8b0000;
-  color: white;
-  font-family: Arial, sans-serif;
-  font-size: 20px;
-  font-weight: bold;
-  text-decoration: none;
-  border: 3px solid #ff4444;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-
-.doom-button:hover {
-  background: #c00000;
-  transform: scale(1.05);
-}
-</style>
-
 </body>
 </html>
-```
-
