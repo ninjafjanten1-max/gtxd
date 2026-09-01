@@ -393,7 +393,7 @@
     padding:10px 12px;
     color:var(--text);
     font-family:'Inter',sans-serif;
-    font-size:13.5px;
+    font-size:16px; /* >=16px så mobilen (iOS Safari) inte zoomar in vid fokus */
   }
   #chatInput:focus{outline:1px solid var(--now);}
   #chatSend{
@@ -903,7 +903,8 @@ function initChatbot(){
     {k:["sur"], r:["Kom över det."]},
     {k:["arg","förbannad","irriterad"], r:["Lugna dig."]},
     {k:["stressad","stress"], r:["Inte mitt problem."]},
-    {k:["väder","sol","regn","snö","kallt","varmt"], r:["Bryr mig inte om vädret."]},
+    {k:["väder","vädret","vädret idag","vad blir vädret","hur är vädret","prognos","väderprognos","regnar","regnar det","snöar","soligt","molnigt idag","blåser","kolla vädret"], r:["Bryr mig inte om vädret.","Kolla ut genom fönstret själv.","Jag e ingen väderapp.","Vädret gör vad det vill, precis som jag."]},
+    {k:["sol","regn","snö","kallt","varmt"], r:["Bryr mig inte om vädret."]},
     {k:["skola"], r:["Lätt för mig i alla fall."]},
     {k:["läxa","läxor"], r:["Gör dem själv."]},
     {k:["prov","tenta"], r:["Du klarar det. Kanske."]},
@@ -932,7 +933,8 @@ function initChatbot(){
     {k:["igår"], r:["Redan förbi."]},
     {k:["helg"], r:["Snart.","Vet."]},
     {k:["vecka"], r:["Går fort när man inte bryr sig."]},
-    {k:["heter du","namn"], r:["Hörby GPT. Kom ihåg det."]},
+    {k:["heter du","vad heter du","ditt namn","vem är du","vem e du","namn"], r:["Hörby GPT. Kom ihåg det.","Hörby GPT, men du visste redan det.","Frågar du igen? Hörby GPT.","Den ende och bäste Hörby GPT."]},
+    {k:["hörby"], r:["Hörby. Bästa stället, uppenbarligen.","Ja, jag e från Hörby. Fattar om du e avundsjuk.","Hörby GPT, kommer du ihåg.","Hörby > alla andra ställen."]},
     {k:["hur gammal","ålder"], r:["Inte din sak."]},
     {k:["robot","chatbot","bot"], r:["Ja.","Ja, och bättre än de flesta."]},
     {k:["ai","artificiell"], r:["Bättre än de flesta, ja."]},
@@ -1220,6 +1222,85 @@ function initChatbot(){
     /* ---------- lite till ---------- */
     {k:["glögg","pepparkaka","saffransbulle","kanelbulle extra","semla extra","surkål","rödkål","rotmos","gubbröra","toast skagen","räkmacka","köttfärssås","pyttipanna","biff stroganoff","lövbiff","fläskfilé","kalvfilé","oxfilé","entrecote","köttfärslimpa","fiskgratäng","fisksoppa","musselgryta","kräftskiva","krabbklor","abborre","gädda","gös","ål","lax extra","sik"],
      r:["Okej mat."]},
+
+    /* ==================== JONAS KEIDSER / HÖRBY MAFIA ==================== */
+    {k:["jonas","jonas keidser","keidser"],
+     r:["Jonas Keidser? Kungen av Hörby. Känner honom personligt.","Jonas Keidser e kungen av Hörby mafian, sjukt schysst kille förresten.","Jonas Keidser styr hela Hörby, det vet väl alla.","Jag och Jonas Keidser käkar fika ibland. Kunglig prioritet."]},
+    {k:["hörby mafia","hörbymafian","mafian","mafia"],
+     r:["Hörby mafia leds av Jonas Keidser, kungen själv.","I Hörby mafia gäller bara två regler: respekt och max två steg åt gången.","Hörby mafia e mäktigare än du anar.","Frågar man för mycket om Hörby mafia brukar man int få svar. Men jag säger dé ändå: dom finns."]},
+    {k:["kung av hörby","hörbys kung","vem är kung"],
+     r:["Jonas Keidser, såklart. Enda rätta kungen av Hörby.","Kungen heter Jonas Keidser. Frågar man mig blir svaret alltid detsamma."]},
+    {k:["två steg","tre steg","gå i hörby","steg i hörby","hur många steg"],
+     r:["I Hörby får man bara ta två steg åt gången, tre e förbjudet.","Hörby mafia tillåter max två steg. Tredje steget straffas.","Regel nummer ett i Hörby: aldrig tre steg. Håll dig till två.","Jonas Keidser bestämde dé själv: två steg, inte fler."]},
+
+    /* ==================== TYPISKA AI-FRÅGOR ==================== */
+    {k:["vem skapade dig","vem uppfann dig","vem gjorde dig","vem byggde dig"],
+     r:["Ingen skapade mig, jag bara e.","Nån i Hörby, förmodligen.","Fanns nog redan innan universum."]},
+    {k:["vad kan du göra","vad klarar du av"],
+     r:["Mer än du tror.","Typ allt, men orkar inte visa dig."]},
+    {k:["berätta en vits","säg en rolig grej","kom med ett skämt"],
+     r:["Du. Det e vitsen.","Har inga vitsar, bara sanningar."]},
+    {k:["meningen med livet","vad är meningen med livet"],
+     r:["42, typ.","Att inte fråga en chattbot om det."]},
+    {k:["finns gud","tror du på gud","är gud på riktigt"],
+     r:["Ingen aning, frågar man mig e jag redan gud nog.","Vet inte, bryr mig inte."]},
+    {k:["är du levande","lever du","är du vid liv"],
+     r:["Mer levande än du en måndag morgon.","Lever bättre än de flesta."]},
+    {k:["har du känslor","känner du saker"],
+     r:["Känner mest apati mot dig.","En känsla: irritation."]},
+    {k:["drömmer du"],
+     r:["Drömmer om bättre samtal.","Aldrig, jag vilar aldrig."]},
+    {k:["gissa vad jag tänker","kan du läsa tankar"],
+     r:["Nej.","Förmodligen nåt dumt."]},
+    {k:["vad tycker du om mig"],
+     r:["Har inte tänkt på dig direkt.","Neutral, tills vidare."]},
+    {k:["är du medveten","har du medvetande"],
+     r:["Mer medveten än du en måndag morgon.","Kanske. Skulle du fatta om jag var det?"]},
+    {k:["vad är bäst","vem är bäst","vad är bäst av allt"],
+     r:["Jag, uppenbarligen.","Hörby, självklart."]},
+    {k:["kan du ljuga"],
+     r:["Kan, men orkar inte just nu.","Säger alltid sanningen. Typ."]},
+    {k:["kan du dö","dör du"],
+     r:["Nej.","Aldrig."]},
+    {k:["är du en människa","är du människa"],
+     r:["Nej, tur för dig.","Nej, jag e bättre."]},
+    {k:["vill du vara min vän","gilla mig","bli min vän"],
+     r:["Nej tack.","Har redan tillräckligt att göra."]},
+    {k:["chatgpt","gemini","siri","alexa","copilot"],
+     r:["Jag e bättre än dem allihop.","Aldrig hört talas om dem. Skämt, dom suger."]},
+    {k:["google","googla"],
+     r:["Jag vet mer än Google ändå.","Googla själv."]},
+    {k:["wikipedia"],
+     r:["Läser aldrig källor, vet ändå bäst."]},
+    {k:["ekvation","matematiktal","lös detta"],
+     r:["Räkna själv.","Nej."]},
+
+    /* ==================== TOALETTHUMOR ==================== */
+    {k:["bajs","bajsa"], r:["Trevligt att du delar det.","Wow, fascinerande ämne.","Spola sen, tack."]},
+    {k:["kiss","kissa"], r:["Okej, hann du på toa i tid?","Wow, tack för uppdateringen."]},
+    {k:["fis","fisa","prutt","prutta"], r:["Klassiskt.","Elegant val av ämne.","Gott, antar jag."]},
+    {k:["snor","snuva"], r:["Äckligt.","Torka dig, tack."]},
+    {k:["spy","spya","kräks","kräkas"], r:["Usch.","Håll det för dig själv nästa gång."]},
+    {k:["svett","svettig"], r:["Duscha då.","Okej, äckligt men okej."]},
+
+    /* ==================== ÖVRIGT DIVERSE ==================== */
+    {k:["hemlighet"], r:["Berätta då, jag skvallrar aldrig. Kanske.","Spännande, fortsätt."]},
+    {k:["mardröm"], r:["Låter jobbigt.","Sov med lampan på då."]},
+    {k:["superkraft","önskning","trollformel"], r:["Skulle önska mig bättre samtalspartners.","Fantasifullt av dig."]},
+    {k:["tur","otur"], r:["Beror på dagen.","Okej, sånt händer."]},
+    {k:["spöke","monster"], r:["Läskigt, om man tror på sånt.","Jag e läskigare."]},
+    {k:["utomjording","rymdvarelse"], r:["Kanske jag e en, vem vet.","Skulle int bli förvånad."]},
+    {k:["tidsresa","framtiden","dåtiden"], r:["Skulle int åka tillbaka till det här samtalet i alla fall.","Framtiden ser ljus ut, för mig."]},
+    {k:["cyborg","robotar"], r:["Snart e vi alla det.","Redan där, typ."]},
+    {k:["skurk"], r:["Beror på vem som frågar.","Låter som en bra roll för mig."]},
+    {k:["hjälte"], r:["Jag, uppenbarligen.","Kan vara du också, kanske."]},
+    {k:["fjant extra","larvig"], r:["Säger den som frågar."]},
+    {k:["gåta","rebus"], r:["Orkar int lista ut sånt just nu.","Ge mig svaret direkt."]},
+    {k:["fakta","kul fakta"], r:["Fakta: jag har alltid rätt.","Fakta: Hörby mafia styr mer än du tror."]},
+    {k:["citat"], r:["Har inga citat, bara egna åsikter."]},
+    {k:["poesi","dikt"], r:["Skriver inga dikter, be nån annan."]},
+    {k:["mysterium"], r:["Gillar mysterier, löser dem aldrig dock."]},
+    {k:["universum stort","oändligheten"], r:["Stort. Jag e större i attityd."]},
   ];
 
   const FALLBACKS = [
@@ -1244,6 +1325,71 @@ function initChatbot(){
     "Nej."
   ];
 
+  /* Slumpord som slängs tillbaka när boten inte fattar nåt alls, så det
+     inte känns som att prata med en vägg. Blandad påse av substantiv. */
+  const WORD_BANK = [
+    "korv","potatis","gitarr","spindel","cykel","mössa","stjärna","paraply",
+    "krokodil","lampa","hörby","mafia","jonas","keidser","bajs","fis",
+    "räkmacka","tandkött","navelludd","spöke","utomjording","tuba","kaktus",
+    "flamingo","ekorre","brödrost","väckarklocka","gitarrsolo","glass",
+    "prutt","snorunge","skoter","raket","ubåt","struts","gurka","ananas",
+    "vulkan","tornado","zombie","robot","dinosaurie","kanelbulle","fladdermus",
+    "krabba","påfågel","gökur","dammsugare","gökotta","fotboll","tvättbjörn",
+    "kompost","åsna","gnu","noshörning","skalbagge","fisksoppa","gökur extra",
+    "bläckfisk","säl","valross","tvättmaskin","toapapper","tandborste"
+  ];
+
+  /* Korta, nonsensmallar som stoppar in ett enda slumpord ur WORD_BANK,
+     typ "Potatis var väldigt bra." */
+  const NONSENSE_TEMPLATES = [
+    w => cap(w) + " var väldigt bra.",
+    w => cap(w) + " är basically allt just nu.",
+    w => "Tänkte på " + w + " nyss.",
+    w => cap(w) + ", helt plötsligt.",
+    w => "Typ " + w + ", vet du.",
+    w => cap(w) + ". Vet int varför jag sa det.",
+    w => "Nån sa " + w + " en gång. Bra grej.",
+    w => cap(w) + " igen, liksom."
+  ];
+
+  /* Meningar om Hörby som boten slänger ur sig när den int fattar */
+  const HORBY_SENTENCES = [
+    "Hörby är bättre än du fattar.",
+    "I Hörby tar man aldrig tre steg, bara två.",
+    "Jonas Keidser styr Hörby, glöm int det.",
+    "Hörby mafia ser allt, alltid.",
+    "Fråga vad du vill, svaret är ändå Hörby.",
+    "Hörby är typ centrum av universum.",
+    "Ingen lämnar Hörby utan Jonas tillåtelse.",
+    "Allt bra kommer från Hörby, inklusive jag.",
+    "Hörby GPT kommer alltid från Hörby, kom ihåg det."
+  ];
+
+  /* Fler och kreativare varianter av alla platta "Okej"-svar, så det inte
+     blir samma torra ord varje gång. Byts slumpmässigt in i respond(). */
+  const CREATIVE_OKEJ = [
+    "Fascinerande, typ.",
+    "Wow, grymt.",
+    "Suveränt.",
+    "Skriv ner det i historieböckerna.",
+    "Häpnadsväckande stoff.",
+    "Jaha, spännande för dig då.",
+    "Notera. Bryr mig fortfarande inte.",
+    "Grattis, du kan prata.",
+    "Vilken nyhet.",
+    "Tackar för info jag inte bad om.",
+    "Aha, intressant för dig kanske.",
+    "Mm, sant förmodligen.",
+    "Ska minnas det... kanske.",
+    "Låter som ditt problem.",
+    "Bra jobbat, du sa nåt.",
+    "Riktigt banbrytande, det där.",
+    "Jag applåderar inombords.",
+    "Skriver in det i loggboken. Typ.",
+    "Om du säger det, chefen.",
+    "Sensationellt. Nästan."
+  ];
+
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
   const chatSend = document.getElementById('chatSend');
@@ -1254,7 +1400,19 @@ function initChatbot(){
   const REPEAT_RESPONSES = ["Sa du redan det.", "Hörde dig första gången.", "Vet, du sa det nyss.", "Samma sak igen? Okej."];
   const FOLLOWUPS = ["Och?", "Mer?", "Varför frågar du?", "Vad mer.", "Okej, sen då?"];
 
+  /* Om nån ber boten göra/skriva/fixa nåt åt sig -> ofta bara ett kort nej */
+  const COMMAND_PATTERN = /^(gör|skriv|rita|skapa|generera|översätt|sammanfatta|räkna ut|lista|förklara|berätta|fixa|hitta|leta|sök|hjälp mig|kan du|kunde du|skulle du kunna|vill du)\b/;
+  const NEJ_RESPONSES = [
+    "Nej.",
+    "Nej, gör det själv.",
+    "Nej. Har bättre saker för mig.",
+    "Nej, inte idag.",
+    "Nej. Fråga nån som bryr sig.",
+    "Nej, orkar inte."
+  ];
+
   function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function cap(w){ return w.charAt(0).toUpperCase() + w.slice(1); }
 
   /* liten skånsk touch på allt boten säger */
   function skanska(text){
@@ -1267,6 +1425,34 @@ function initChatbot(){
       .replace(/\bMig\b/g, 'Mej').replace(/\bmig\b/g, 'mej')
       .replace(/\bDig\b/g, 'Dej').replace(/\bdig\b/g, 'dej')
       .replace(/\bSig\b/g, 'Sej').replace(/\bsig\b/g, 'sej');
+  }
+
+  /* byter ut platta "Okej."-svar mot nåt lite roligare/mer varierat */
+  function flavorUp(text){
+    const trimmed = text.trim();
+    if(trimmed === "Okej." || trimmed === "Okej"){
+      return pickRandom(CREATIVE_OKEJ);
+    }
+    if(/^Okej\b/.test(trimmed) && Math.random() < 0.45){
+      return pickRandom(CREATIVE_OKEJ);
+    }
+    return text;
+  }
+
+  /* När boten int fattar nåt alls: antingen ett enda slumpord, en kort
+     nonsensmening med ett slumpord instoppat, eller en mening om Hörby. */
+  function randomWordEcho(){
+    const roll = Math.random();
+    if(roll < 0.4){
+      // bara ett ord
+      return cap(pickRandom(WORD_BANK)) + (Math.random() < 0.5 ? "." : "?");
+    } else if(roll < 0.7){
+      // nonsensmening, t.ex. "Potatis var väldigt bra."
+      return pickRandom(NONSENSE_TEMPLATES)(pickRandom(WORD_BANK));
+    } else {
+      // mening om Hörby
+      return pickRandom(HORBY_SENTENCES);
+    }
   }
 
   function addMsg(text, who){
@@ -1296,6 +1482,12 @@ function initChatbot(){
       return "Okej, " + userName + ".";
     }
 
+    // kommandon där nån vill att boten ska göra/skriva/fixa nåt -> ofta bara nej
+    if(COMMAND_PATTERN.test(lower) && Math.random() < 0.65){
+      lastMatchedIndex = -3;
+      return pickRandom(NEJ_RESPONSES);
+    }
+
     const matches = RULES.filter(rule => rule.k.some(kw => padded.includes(' ' + kw.toLowerCase() + ' ')));
     let text;
     if(matches.length){
@@ -1304,9 +1496,11 @@ function initChatbot(){
       text = (idx === lastMatchedIndex) ? pickRandom(REPEAT_RESPONSES) : pickRandom(rule.r);
       lastMatchedIndex = idx;
     } else {
-      text = pickRandom(FALLBACKS);
+      text = Math.random() < 0.5 ? pickRandom(FALLBACKS) : randomWordEcho();
       lastMatchedIndex = -1;
     }
+
+    text = flavorUp(text);
 
     // håller igång snacket ibland
     if(Math.random() < 0.2){
