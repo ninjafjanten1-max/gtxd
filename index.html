@@ -467,6 +467,27 @@
   }
   .modal .close:hover{background:var(--line);}
 
+  .modal-toggle{
+    display:block;
+    width:100%;
+    margin-top:16px;
+    padding:11px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .modal-toggle:hover{background:var(--line);}
+  .modal-toggle.is-off{
+    background:var(--now);
+    border-color:var(--now);
+    color:#fff;
+  }
+
   @media (max-width:720px){
     .board{grid-template-columns:38px repeat(5,1fr);}
     .lesson{font-size:9.5px;padding:4px 5px;}
@@ -531,6 +552,7 @@
     <div class="row"><span>Tid</span><span id="modalTime">—</span></div>
     <div class="row"><span>Längd</span><span id="modalDuration">—</span></div>
     <div class="row" id="modalMetaRow"><span>Info</span><span id="modalMeta">—</span></div>
+    <button class="modal-toggle" id="modalToggleBtn" style="display:none;"></button>
   </div>
 </div>
 
@@ -721,6 +743,19 @@ function isLight(hex){
 /* ---------- MODAL ---------- */
 const overlay = document.getElementById('overlay');
 const modal = document.getElementById('modal');
+const modalToggleBtn = document.getElementById('modalToggleBtn');
+
+/* om man kryssar av dagens aktuella aktivitet i förtid (avslutade den 5 min
+   tidigt t.ex.) så räknas den int längre som "pågående" -> statusraden visar
+   istället nedräkning till nästa. Återställs automatiskt varje ny dag. */
+let deactivatedId = null;
+let deactivatedDateStr = null;
+let currentModalId = null;
+
+function blockId(L){
+  return L.day + '|' + L.start + '|' + L.end + '|' + L.title;
+}
+
 function openModal(L, s, e){
   document.getElementById('modalDay').textContent = dayNames[L.day];
   document.getElementById('modalTitle').textContent = L.title;
@@ -734,8 +769,39 @@ function openModal(L, s, e){
     metaRow.style.display = 'none';
   }
   modal.style.setProperty('--modal-accent', L.color);
+
+  // knappen är bara relevant för dagens egna aktiviteter
+  if(L.day === new Date().getDay()){
+    currentModalId = blockId(L);
+    const isOff = currentModalId === deactivatedId;
+    modalToggleBtn.style.display = 'block';
+    modalToggleBtn.textContent = isOff ? 'Aktivera igen' : 'Avsluta i förtid / deaktivera';
+    modalToggleBtn.classList.toggle('is-off', isOff);
+  } else {
+    currentModalId = null;
+    modalToggleBtn.style.display = 'none';
+  }
+
   overlay.classList.add('open');
 }
+
+modalToggleBtn.addEventListener('click', ()=>{
+  if(!currentModalId) return;
+  const todayStr = new Date().toDateString();
+  if(deactivatedId === currentModalId){
+    deactivatedId = null;
+    deactivatedDateStr = null;
+    modalToggleBtn.textContent = 'Avsluta i förtid / deaktivera';
+    modalToggleBtn.classList.remove('is-off');
+  } else {
+    deactivatedId = currentModalId;
+    deactivatedDateStr = todayStr;
+    modalToggleBtn.textContent = 'Aktivera igen';
+    modalToggleBtn.classList.add('is-off');
+  }
+  update();
+});
+
 document.getElementById('closeModal').addEventListener('click', ()=> overlay.classList.remove('open'));
 overlay.addEventListener('click', (ev)=>{ if(ev.target === overlay) overlay.classList.remove('open'); });
 document.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape') overlay.classList.remove('open'); });
@@ -766,7 +832,7 @@ function renderBoard(weekType){
       '<span class="time">'+L.start+'–'+L.end+'</span>';
     div.addEventListener('click', ()=> openModal(L, s, e));
     dayColEls[L.day].appendChild(div);
-    lessonEls.push({el:div, day:L.day, start:s, end:e, title:L.title});
+    lessonEls.push({el:div, day:L.day, start:s, end:e, title:L.title, id:blockId(L)});
   });
 
   // gap-indikatorer mellan alla block (inkl. sova/läsa/kvällsaktiviteter) per dag
@@ -844,11 +910,17 @@ function update(){
     nowLineEl = null;
   }
 
+  // deaktiveringen gäller bara den dag den sattes på, återställs automatiskt annars
+  if(deactivatedDateStr && deactivatedDateStr !== now.toDateString()){
+    deactivatedId = null;
+    deactivatedDateStr = null;
+  }
+
   const statusText = document.getElementById('statusText');
   if(!isSchoolDay){
     statusText.innerHTML = '<b>Helg</b> <span class="muted">— inget schemalagt</span>';
   } else {
-    const current = lessonEls.find(o => o.day===dow && mins>=o.start && mins<o.end);
+    const current = lessonEls.find(o => o.day===dow && mins>=o.start && mins<o.end && o.id !== deactivatedId);
     if(current){
       current.el.classList.add('active');
       const left = current.end - mins;
