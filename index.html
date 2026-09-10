@@ -471,6 +471,31 @@
   }
   #startJsBtn:hover{filter:brightness(1.08);}
 
+  .js-level-select{text-align:center;}
+  .js-level-title{
+    font-size:13.5px;
+    color:var(--muted);
+    margin:0 0 12px;
+  }
+  .js-level-buttons{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .js-level-btn{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+  }
+  .js-level-btn:hover{background:var(--now);border-color:var(--now);color:#fff;}
+
   .js-track-wrap{margin:6px 0 18px;}
   .js-track{
     position:relative;
@@ -2112,10 +2137,89 @@ document.getElementById('startJsBtn').addEventListener('click', initJakubSim, {o
 
 function initJakubSim(){
   const container = document.getElementById('jsContainer');
-  renderJakubGame(container);
+  renderLevelSelect(container);
 }
 
-function renderJakubGame(container){
+/* 50 olika personer att välja bland, så Svår (45) inte upprepar sig mycket */
+const JS_PEOPLE_POOL = [
+  {emoji:'🏃', desc:'En jogger med solglasögon nickar mot dig.'},
+  {emoji:'👵', desc:'En äldre dam frågar om klockan.'},
+  {emoji:'🧑', desc:'En kille i huvtröja håller avstånd, säger inget.'},
+  {emoji:'🧒', desc:'Ett barn cyklar förbi och vinkar.'},
+  {emoji:'🧑\u200d💼', desc:'En man i kostym pratar högt i telefon.'},
+  {emoji:'🐕', desc:'En hundägare nickar hälsning, hunden skäller argt.'},
+  {emoji:'🧢', desc:'En person i keps stirrar lite för länge.'},
+  {emoji:'📦', desc:'Ett postbud levererar paket till grannen.'},
+  {emoji:'🎧', desc:'En joggande person med hörlurar springer förbi.'},
+  {emoji:'🕵️', desc:'En skum figur i skuggorna rör sig konstigt.'},
+  {emoji:'👮', desc:'En polis håller utkik längre bort.'},
+  {emoji:'🎒', desc:'En student med ryggsäck skyndar förbi.'},
+  {emoji:'👨\u200d🍳', desc:'En kock på rast röker utanför restaurangen.'},
+  {emoji:'🚜', desc:'En bonde kör en traktor sakta förbi.'},
+  {emoji:'🚒', desc:'En brandman tvättar en brandbil.'},
+  {emoji:'🧙', desc:'En person utklädd till trollkarl delar ut flygblad.'},
+  {emoji:'🤡', desc:'En clown balanserar en ballong.'},
+  {emoji:'🎸', desc:'En gatumusikant spelar gitarr.'},
+  {emoji:'🔧', desc:'En rörmokare bär en verktygslåda.'},
+  {emoji:'👩\u200d⚕️', desc:'En sjuksköterska i uniform går snabbt.'},
+  {emoji:'🧟', desc:'Nån utklädd till zombie skrämmer förbipasserande.'},
+  {emoji:'👻', desc:'Ett barn i spöke-kostym springer skrattande.'},
+  {emoji:'🧛', desc:'En person med vampyrtänder ler brett.'},
+  {emoji:'👨\u200d🚀', desc:'En astronaut-kostymerad person delar ut reklam.'},
+  {emoji:'🔭', desc:'En fågelskådare med kikare stirrar upp i träden.'},
+  {emoji:'🚴', desc:'En cyklist susar förbi på en racercykel.'},
+  {emoji:'🛴', desc:'Ett barn på sparkcykel viker undan i sista sekund.'},
+  {emoji:'👩\u200d🏫', desc:'En lärare bär en hög med papper.'},
+  {emoji:'🎨', desc:'En konstnär målar vid ett staffli.'},
+  {emoji:'✈️', desc:'En pilot i uniform väntar på en taxi.'},
+  {emoji:'🚕', desc:'En taxichaufför lutar sig ut och frågar om vägen.'},
+  {emoji:'🦯', desc:'En person med vit käpp går försiktigt.'},
+  {emoji:'♿', desc:'En person i rullstol rullar förbi i god fart.'},
+  {emoji:'🐈', desc:'En katt smyger i buskarna, ägaren följer efter.'},
+  {emoji:'🐦', desc:'En korp kraxar högt från ett tak, någon tittar upp.'},
+  {emoji:'🍂', desc:'En trädgårdsmästare krattar löv.'},
+  {emoji:'🛹', desc:'En skateboardåkare gör ett trick precis intill dig.'},
+  {emoji:'🤳', desc:'En influencer filmar sig själv med mobilen.'},
+  {emoji:'🧑\u200d🦳', desc:'En pensionär matar duvor på en bänk.'},
+  {emoji:'🎓', desc:'En nyexaminerad student firar med vänner.'},
+  {emoji:'🚨', desc:'En brandkonstapel springer mot en brand längre bort.'},
+  {emoji:'🥷', desc:'En figur i svart huva rör sig ovanligt tyst.'},
+  {emoji:'⚖️', desc:'En domare i kappa skyndar mot tinghuset.'},
+  {emoji:'🔬', desc:'En forskare bär en låda med provrör.'},
+  {emoji:'🖌️', desc:'En gatukonstnär sprejmålar en vägg.'},
+  {emoji:'🧳', desc:'En flygvärdinna drar en resväska.'},
+  {emoji:'🐝', desc:'En biodlare bär en bikupa.'},
+  {emoji:'⭐', desc:'En rymdentusiast tittar upp mot himlen med en stjärnkarta.'},
+  {emoji:'🔔', desc:'En cyklist ringer på cykelklockan.'},
+  {emoji:'🧑\u200d🦲', desc:'En flintskallig man joggar med en hund i koppel.'}
+];
+
+function shuffleArr(arr){
+  const a = [...arr];
+  for(let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function renderLevelSelect(container){
+  container.innerHTML =
+    '<div class="js-level-select">' +
+      '<p class="js-level-title">Välj nivå:</p>' +
+      '<div class="js-level-buttons">' +
+        '<button class="js-level-btn" data-count="10">Lätt (10)</button>' +
+        '<button class="js-level-btn" data-count="25">Medel (25)</button>' +
+        '<button class="js-level-btn" data-count="45">Svår (45)</button>' +
+      '</div>' +
+    '</div>';
+
+  container.querySelectorAll('.js-level-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> startJakubLevel(container, parseInt(btn.dataset.count, 10)));
+  });
+}
+
+function startJakubLevel(container, count){
   container.innerHTML =
     '<div class="js-track-wrap">' +
       '<div class="js-track">' +
@@ -2128,32 +2232,20 @@ function renderJakubGame(container){
       '<div class="js-avatar" id="jsAvatar"></div>' +
       '<div class="js-desc" id="jsDesc"></div>' +
       '<div class="js-actions">' +
-        '<button id="jsBurn">🔥 Eliminera</button>' +
+        '<button id="jsBurn">Eliminera</button>' +
         '<button id="jsLet">🚶 Låt gå</button>' +
       '</div>' +
     '</div>' +
     '<div class="js-result" id="jsResult"></div>';
 
-  const PEOPLE_BASE = [
-    {emoji:'🏃', desc:'En jogger med solglasögon nickar mot dig.'},
-    {emoji:'👵', desc:'En äldre dam frågar om klockan.'},
-    {emoji:'🧑\u200d🦱', desc:'En kille i huvtröja håller avstånd, säger inget.'},
-    {emoji:'🧒', desc:'Ett barn cyklar förbi och vinkar.'},
-    {emoji:'🧑\u200d💼', desc:'En man i kostym pratar högt i telefon.'},
-    {emoji:'🐕', desc:'En hundägare nickar hälsning, hunden skäller argt.'},
-    {emoji:'🧢', desc:'En person i keps stirrar lite för länge.'},
-    {emoji:'📦', desc:'Ett postbud levererar paket till grannen.'},
-    {emoji:'🎧', desc:'En joggande person med hörlurar springer förbi.'},
-    {emoji:'🕵️', desc:'En skum figur i skuggorna rör sig konstigt.'}
-  ];
+  const people = shuffleArr(JS_PEOPLE_POOL).slice(0, count);
 
-  // ny ordning + ny "farlig person" varje omgång, för lite återspelbarhet
-  const people = [...PEOPLE_BASE];
-  for(let i=people.length-1; i>0; i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [people[i],people[j]] = [people[j],people[i]];
+  // fler farliga personer ju högre nivå, ca 1 per 10 personer
+  const dangerCount = Math.max(1, Math.ceil(count/10));
+  const dangerIndices = new Set();
+  while(dangerIndices.size < dangerCount){
+    dangerIndices.add(Math.floor(Math.random()*people.length));
   }
-  const dangerIndex = Math.floor(Math.random()*people.length);
 
   let idx = 0;
 
@@ -2186,14 +2278,14 @@ function renderJakubGame(container){
     if(idx >= people.length){
       winGame();
     } else {
-      setTimeout(showPerson, 450);
+      setTimeout(showPerson, 350);
     }
   }
 
   function choose(action){
     burnBtn.disabled = true;
     letBtn.disabled = true;
-    const isDanger = (idx === dangerIndex);
+    const isDanger = dangerIndices.has(idx);
 
     if(action === 'burn'){
       avatarEl.classList.add('burning');
@@ -2212,7 +2304,7 @@ function renderJakubGame(container){
         setTimeout(caughtGame, 700);
       } else {
         resultEl.textContent = 'Personen går vidare, ofarlig.';
-        setTimeout(nextOrEnd, 500);
+        setTimeout(nextOrEnd, 350);
       }
     }
   }
@@ -2227,7 +2319,7 @@ function renderJakubGame(container){
         '<p>🚨 Jakub blev fångad och kom inte till skolan idag.</p>' +
         '<button id="jsRetry">Försök igen</button>' +
       '</div>';
-    document.getElementById('jsRetry').addEventListener('click', ()=> renderJakubGame(container));
+    document.getElementById('jsRetry').addEventListener('click', ()=> renderLevelSelect(container));
   }
 
   function winGame(){
@@ -2239,7 +2331,7 @@ function renderJakubGame(container){
           '<p>🎉 Jakub kom till skolan!</p>' +
           '<button id="jsRetry">Spela igen</button>' +
         '</div>';
-      document.getElementById('jsRetry').addEventListener('click', ()=> renderJakubGame(container));
+      document.getElementById('jsRetry').addEventListener('click', ()=> renderLevelSelect(container));
     }, 700);
   }
 
