@@ -496,23 +496,61 @@
   }
   .js-level-btn:hover{background:var(--now);border-color:var(--now);color:#fff;}
 
+  #jsContainer{position:relative;}
+  .js-flame-shot{
+    position:absolute;
+    font-size:24px;
+    pointer-events:none;
+    z-index:20;
+    transition:left .38s ease, top .38s ease, transform .38s ease;
+    filter:drop-shadow(0 0 6px rgba(255,120,40,0.85));
+  }
+
   .js-track-wrap{margin:6px 0 18px;}
   .js-track{
     position:relative;
     height:64px;
     border-bottom:2px dashed var(--line);
   }
-  .js-sprite{
+  .js-sprite-wrap{
     position:absolute;
     bottom:0;
     left:0;
     width:46px;
     height:46px;
-    object-fit:cover;
-    border-radius:50%;
-    border:2px solid var(--now);
-    background:#fff;
     transition:left 1s ease;
+  }
+  .js-sprite-half{
+    position:absolute;
+    left:0;
+    width:46px;
+    height:23px;
+    overflow:hidden;
+    background-image:url('Jakub.png');
+    background-size:46px 46px;
+    background-repeat:no-repeat;
+    background-color:#fff;
+    transition:transform .15s ease;
+  }
+  .js-sprite-top{
+    top:0;
+    background-position:0 0;
+    border-radius:23px 23px 0 0;
+    border:2px solid var(--now);
+    border-bottom:none;
+  }
+  .js-sprite-bottom{
+    bottom:0;
+    background-position:0 -23px;
+    border-radius:0 0 23px 23px;
+    border:2px solid var(--now);
+    border-top:none;
+  }
+  .js-sprite-wrap.mouth-open .js-sprite-top{
+    transform:translateY(-7px) rotate(-4deg);
+  }
+  .js-sprite-wrap.mouth-open .js-sprite-bottom{
+    transform:translateY(7px) rotate(4deg);
   }
   .js-school{
     position:absolute;
@@ -2223,7 +2261,10 @@ function startJakubLevel(container, count){
   container.innerHTML =
     '<div class="js-track-wrap">' +
       '<div class="js-track">' +
-        '<img id="jsSprite" class="js-sprite" src="Jakub.png" alt="Jakub">' +
+        '<div id="jsSpriteWrap" class="js-sprite-wrap">' +
+          '<div class="js-sprite-half js-sprite-top"></div>' +
+          '<div class="js-sprite-half js-sprite-bottom"></div>' +
+        '</div>' +
         '<div class="js-school">🏫</div>' +
       '</div>' +
     '</div>' +
@@ -2249,7 +2290,7 @@ function startJakubLevel(container, count){
 
   let idx = 0;
 
-  const sprite = document.getElementById('jsSprite');
+  const sprite = document.getElementById('jsSpriteWrap');
   const label = document.getElementById('jsProgressLabel');
   const avatarEl = document.getElementById('jsAvatar');
   const descEl = document.getElementById('jsDesc');
@@ -2282,21 +2323,60 @@ function startJakubLevel(container, count){
     }
   }
 
+  function shootFlame(onArrive){
+    sprite.classList.add('mouth-open');
+
+    const cRect = container.getBoundingClientRect();
+    const fRect = sprite.getBoundingClientRect();
+    const tRect = avatarEl.getBoundingClientRect();
+
+    // munnen öppnas mitt på Jakubs runda bild -> elden startar exakt där
+    const startX = fRect.left - cRect.left + fRect.width*0.5;
+    const startY = fRect.top - cRect.top + fRect.height*0.5;
+    const endX = tRect.left - cRect.left + tRect.width/2 - 12;
+    const endY = tRect.top - cRect.top + tRect.height/2 - 12;
+
+    const flame = document.createElement('div');
+    flame.className = 'js-flame-shot';
+    flame.textContent = '🔥';
+    flame.style.left = startX + 'px';
+    flame.style.top = startY + 'px';
+    flame.style.transform = 'scale(0.6)';
+    container.appendChild(flame);
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        flame.style.left = endX + 'px';
+        flame.style.top = endY + 'px';
+        flame.style.transform = 'scale(1.3) rotate(15deg)';
+      });
+    });
+
+    setTimeout(()=> sprite.classList.remove('mouth-open'), 320);
+
+    setTimeout(()=>{
+      flame.remove();
+      onArrive();
+    }, 380);
+  }
+
   function choose(action){
     burnBtn.disabled = true;
     letBtn.disabled = true;
     const isDanger = dangerIndices.has(idx);
 
     if(action === 'burn'){
-      avatarEl.classList.add('burning');
-      resultEl.textContent = isDanger
-        ? 'Farlig person eliminerad. Bra jobbat.'
-        : 'Oskyldig person... eliminerad. Lite väl snabb på avtryckaren.';
-      setTimeout(()=>{
-        avatarEl.classList.remove('burning');
-        avatarEl.classList.add('fadeout');
-        setTimeout(nextOrEnd, 400);
-      }, 500);
+      shootFlame(()=>{
+        avatarEl.classList.add('burning');
+        resultEl.textContent = isDanger
+          ? 'Farlig person eliminerad. Bra jobbat.'
+          : 'Oskyldig person... eliminerad. Lite väl snabb på avtryckaren.';
+        setTimeout(()=>{
+          avatarEl.classList.remove('burning');
+          avatarEl.classList.add('fadeout');
+          setTimeout(nextOrEnd, 400);
+        }, 500);
+      });
     } else {
       avatarEl.classList.add('walkaway');
       if(isDanger){
