@@ -524,7 +524,6 @@
     position:absolute;
     left:0;
     width:46px;
-    height:23px;
     overflow:hidden;
     background-image:url('Jakub.png');
     background-size:46px 46px;
@@ -534,6 +533,7 @@
   }
   .js-sprite-top{
     top:0;
+    height:31px;
     background-position:0 0;
     border-radius:23px 23px 0 0;
     border:2px solid var(--now);
@@ -541,7 +541,8 @@
   }
   .js-sprite-bottom{
     bottom:0;
-    background-position:0 -23px;
+    height:15px;
+    background-position:0 -31px;
     border-radius:0 0 23px 23px;
     border:2px solid var(--now);
     border-top:none;
@@ -2332,7 +2333,7 @@ function startJakubLevel(container, count){
 
     // munnen öppnas mitt på Jakubs runda bild -> elden startar exakt där
     const startX = fRect.left - cRect.left + fRect.width*0.5;
-    const startY = fRect.top - cRect.top + fRect.height*0.5;
+    const startY = fRect.top - cRect.top + fRect.height*(31/46);
     const endX = tRect.left - cRect.left + tRect.width/2 - 12;
     const endY = tRect.top - cRect.top + tRect.height/2 - 12;
 
