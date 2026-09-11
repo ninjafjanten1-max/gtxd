@@ -948,10 +948,10 @@
       <span class="chatbot-title">Jakub på stranden</span>
     </div>
     <video id="jakubVideo" controls preload="metadata" style="width:100%;border-radius:8px;background:#000;">
-      <source src="Jakub_strand.mp4" type="video/mp4">
+      <source src="Jakub_strand.MP4" type="video/mp4">
       Din webbläsare kan inte spela upp videon.
     </video>
-    <a id="jakubDownload" href="Jakub_strand.mp4" download="Jakub_strand.mp4" class="video-download-btn">Ladda ner videon</a>
+    <a id="jakubDownload" href="Jakub_strand.MP4" download="Jakub_strand.MP4" class="video-download-btn">Ladda ner videon</a>
   </div>
 
   <div class="chatbot-card">
@@ -2609,10 +2609,20 @@ function startAjLevel(container, levelNum){
   const birdsLabel = document.getElementById('ajBirdsLabel');
   const enemiesLabel = document.getElementById('ajEnemiesLabel');
 
-  const {Engine, World, Bodies, Body, Composite, Events} = Matter;
+  const {Engine, World, Bodies, Body, Composite, Events, Vector} = Matter;
   const engine = Engine.create();
+  // fler solver-iterationer -> stabilare, mer verklighetstrogen stapling av lådor
+  engine.positionIterations = 10;
+  engine.velocityIterations = 8;
 
   const CW = 640, CH = 320;
+
+  // rendera i enhetens faktiska pixeltäthet -> skarpare, mer "accurate" grafik
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = CW*dpr;
+  canvas.height = CH*dpr;
+  ctx.scale(dpr, dpr);
+
   const GROUND_Y = level.groundY;
   const ANCHOR = {x:90, y:GROUND_Y-60};
   const MAX_PULL = 90;
@@ -2668,8 +2678,8 @@ function startAjLevel(container, levelNum){
 
   function getCanvasPos(evt){
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width/rect.width;
-    const scaleY = canvas.height/rect.height;
+    const scaleX = CW/rect.width;
+    const scaleY = CH/rect.height;
     const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
     const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
     return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
@@ -2731,13 +2741,18 @@ function startAjLevel(container, levelNum){
 
   Events.on(engine, 'collisionStart', (event)=>{
     event.pairs.forEach(pair=>{
-      const {bodyA, bodyB} = pair;
-      const relVel = Math.hypot(bodyA.velocity.x-bodyB.velocity.x, bodyA.velocity.y-bodyB.velocity.y);
-      if(relVel > 3){
-        spawnParticles((bodyA.position.x+bodyB.position.x)/2, (bodyA.position.y+bodyB.position.y)/2, relVel);
+      const {bodyA, bodyB, collision} = pair;
+      const relVelVec = Vector.sub(bodyA.velocity, bodyB.velocity);
+      // hastigheten längs kollisionsnormalen = den faktiska träffkraften,
+      // till skillnad från total relativ hastighet (som även räknar med
+      // glidning/tangentiell rörelse som inte borde räknas som en smäll)
+      const impactSpeed = Math.abs(Vector.dot(relVelVec, collision.normal));
+
+      if(impactSpeed > 2.5){
+        spawnParticles((bodyA.position.x+bodyB.position.x)/2, (bodyA.position.y+bodyB.position.y)/2, impactSpeed);
       }
       [bodyA, bodyB].forEach(b=>{
-        if(b.isEnemy && !b.removed && relVel > 4){
+        if(b.isEnemy && !b.removed && impactSpeed > 3.5){
           b.removed = true;
           spawnParticles(b.position.x, b.position.y, 12, '#ef4444');
           Composite.remove(engine.world, b);
@@ -2747,20 +2762,36 @@ function startAjLevel(container, levelNum){
     });
   });
 
+  /* kör en isolerad kopia av motorn framåt några steg för att förutsäga
+     banan EXAKT som den riktiga fysiken kommer bete sig, istället för en
+     grov gissning -> mycket mer "accurate" sikte */
+  function predictTrajectory(){
+    const dx = (ANCHOR.x-bird.position.x)*POWER;
+    const dy = (ANCHOR.y-bird.position.y)*POWER;
+
+    const ghostEngine = Engine.create();
+    ghostEngine.world.gravity = engine.world.gravity;
+    const ghostBird = Bodies.circle(bird.position.x, bird.position.y, 20, {friction:0, frictionAir:0});
+    Body.setVelocity(ghostBird, {x:dx, y:dy});
+    World.add(ghostEngine.world, ghostBird);
+
+    const points = [];
+    for(let i=0; i<22; i++){
+      Engine.update(ghostEngine, 1000/60);
+      points.push({x:ghostBird.position.x, y:ghostBird.position.y});
+    }
+    return points;
+  }
+
   function drawTrajectory(){
     if(!dragging || !bird) return;
-    let px = bird.position.x, py = bird.position.y;
-    let vx = (ANCHOR.x-bird.position.x)*POWER;
-    let vy = (ANCHOR.y-bird.position.y)*POWER;
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    for(let i=0; i<18; i++){
-      vy += 0.9;
-      px += vx*0.9;
-      py += vy*0.9;
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    predictTrajectory().forEach((p,i)=>{
+      if(i%1!==0) return;
       ctx.beginPath();
-      ctx.arc(px, py, 3, 0, Math.PI*2);
+      ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
       ctx.fill();
-    }
+    });
   }
 
   function drawBackground(){
