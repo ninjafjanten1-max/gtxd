@@ -645,6 +645,103 @@
   }
   .js-endscreen button:hover{filter:brightness(1.08);}
 
+  /* ---------- Angry Jakubs ---------- */
+  #startAjBtn{
+    background:var(--now);
+    color:#fff;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:10px 20px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #startAjBtn:hover{filter:brightness(1.08);}
+
+  #ajContainer{position:relative;}
+
+  .aj-level-select{text-align:center;}
+  .aj-level-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+    max-width:320px;
+    margin:0 auto;
+  }
+  .aj-level-btn{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-weight:700;
+    padding:12px 0;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+  }
+  .aj-level-btn:hover{background:var(--now);border-color:var(--now);color:#fff;}
+
+  .aj-hud{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+    font-weight:600;
+  }
+  .aj-canvas-wrap{
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  #ajCanvas{
+    display:block;
+    width:100%;
+    height:auto;
+    touch-action:none;
+    cursor:grab;
+  }
+  .aj-hint{
+    text-align:center;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:8px;
+  }
+  .aj-endscreen{
+    position:absolute;
+    inset:0;
+    background:rgba(10,12,18,0.92);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    border-radius:10px;
+    padding:20px;
+    text-align:center;
+  }
+  .aj-endscreen p{
+    font-size:16px;
+    font-weight:700;
+    margin:0;
+    color:var(--text);
+  }
+  .aj-endscreen button{
+    background:var(--now);
+    color:#fff;
+    border:none;
+    font-weight:600;
+    padding:9px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+  }
+  .aj-endscreen button:hover{filter:brightness(1.08);}
+
   #startChatBtn{
     background:var(--now);
     color:#fff;
@@ -851,10 +948,10 @@
       <span class="chatbot-title">Jakub på stranden</span>
     </div>
     <video id="jakubVideo" controls preload="metadata" style="width:100%;border-radius:8px;background:#000;">
-      <source src="Jakub_strand.MP4" type="video/mp4">
+      <source src="Jakub_strand.mp4" type="video/mp4">
       Din webbläsare kan inte spela upp videon.
     </video>
-    <a id="jakubDownload" href="Jakub_strand.MP4" download="Jakub_strand.MP4" class="video-download-btn">Ladda ner videon</a>
+    <a id="jakubDownload" href="Jakub_strand.mp4" download="Jakub_strand.mp4" class="video-download-btn">Ladda ner videon</a>
   </div>
 
   <div class="chatbot-card">
@@ -874,6 +971,16 @@
     </div>
     <div id="jsContainer">
       <button id="startJsBtn">Starta spel</button>
+    </div>
+  </div>
+
+  <div class="chatbot-card">
+    <div class="chatbot-head">
+      <span class="chatbot-title">Angry Jakubs</span>
+      <span class="chatbot-sub">slangbella, fysik och krascher — 10 nivåer</span>
+    </div>
+    <div id="ajContainer">
+      <button id="startAjBtn">Starta spel</button>
     </div>
   </div>
 
@@ -2417,6 +2524,426 @@ function startJakubLevel(container, count){
   }
 
   showPerson();
+}
+
+/* ---------- ANGRY JAKUBS (laddas bara vid klick) ---------- */
+document.getElementById('startAjBtn').addEventListener('click', initAngryJakubs, {once:true});
+
+function initAngryJakubs(){
+  const container = document.getElementById('ajContainer');
+
+  if(window.Matter){
+    renderAjLevelSelect(container);
+    return;
+  }
+
+  container.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;">Laddar spelmotor...</p>';
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js';
+  script.onload = ()=> renderAjLevelSelect(container);
+  script.onerror = ()=>{
+    container.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;">Kunde inte ladda spelmotorn. Kolla internetanslutningen och försök igen.</p>';
+  };
+  document.body.appendChild(script);
+}
+
+function renderAjLevelSelect(container){
+  let html = '<div class="aj-level-select"><p class="js-level-title">Välj nivå (1–10):</p><div class="aj-level-grid">';
+  for(let i=1; i<=10; i++){
+    html += '<button class="aj-level-btn" data-level="'+i+'">'+i+'</button>';
+  }
+  html += '</div></div>';
+  container.innerHTML = html;
+  container.querySelectorAll('.aj-level-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> startAjLevel(container, parseInt(btn.dataset.level, 10)));
+  });
+}
+
+/* bygger upp torn av lådor + fiender, blir gradvis större/svårare per nivå */
+function buildAjLevel(levelNum){
+  const CH = 320;
+  const groundY = CH - 40;
+  const blocks = [];
+  const enemies = [];
+  const baseX = 420;
+  const towers = Math.min(1 + Math.floor(levelNum/3), 4);
+  const stackHeight = Math.min(1 + Math.floor(levelNum/2), 5);
+  const spacing = 90;
+
+  for(let t=0; t<towers; t++){
+    const cx = baseX + t*spacing;
+    for(let s=0; s<stackHeight; s++){
+      blocks.push({
+        x:cx, y: groundY - 20 - s*38, w:36, h:36,
+        material: (levelNum>=6 && s%2===0) ? 'stone' : 'wood'
+      });
+    }
+    enemies.push({x:cx, y: groundY - 20 - stackHeight*38 - 18, r:16});
+  }
+
+  const extra = Math.max(0, Math.floor((levelNum-5)/2));
+  for(let e=0; e<extra; e++){
+    enemies.push({x: baseX - 70 - e*55, y: groundY-16, r:16});
+  }
+
+  const birdsAllowed = Math.min(3 + Math.floor(levelNum/3), 6);
+  return {blocks, enemies, birdsAllowed, groundY};
+}
+
+function startAjLevel(container, levelNum){
+  const level = buildAjLevel(levelNum);
+
+  container.innerHTML =
+    '<div class="aj-hud">' +
+      '<span id="ajLevelLabel">Nivå '+levelNum+' av 10</span>' +
+      '<span id="ajBirdsLabel"></span>' +
+      '<span id="ajEnemiesLabel"></span>' +
+    '</div>' +
+    '<div class="aj-canvas-wrap">' +
+      '<canvas id="ajCanvas" width="640" height="320"></canvas>' +
+    '</div>' +
+    '<p class="aj-hint">Dra i Jakub för att sikta, släpp för att skjuta iväg honom.</p>';
+
+  const canvas = document.getElementById('ajCanvas');
+  const ctx = canvas.getContext('2d');
+  const birdsLabel = document.getElementById('ajBirdsLabel');
+  const enemiesLabel = document.getElementById('ajEnemiesLabel');
+
+  const {Engine, World, Bodies, Body, Composite, Events} = Matter;
+  const engine = Engine.create();
+
+  const CW = 640, CH = 320;
+  const GROUND_Y = level.groundY;
+  const ANCHOR = {x:90, y:GROUND_Y-60};
+  const MAX_PULL = 90;
+  const POWER = 0.22;
+
+  const ground = Bodies.rectangle(CW/2, GROUND_Y+40, CW, 80, {isStatic:true, friction:1});
+  World.add(engine.world, ground);
+
+  const jakubImg = new Image();
+  jakubImg.src = 'Jakub.png';
+
+  const blockBodies = level.blocks.map(b=>{
+    const body = Bodies.rectangle(b.x, b.y, b.w, b.h, {friction:0.6, restitution:0.05});
+    body.material = b.material;
+    return body;
+  });
+  World.add(engine.world, blockBodies);
+
+  const enemyBodies = level.enemies.map(e=>{
+    const body = Bodies.circle(e.x, e.y, e.r, {friction:0.6, restitution:0.2});
+    body.isEnemy = true;
+    return body;
+  });
+  World.add(engine.world, enemyBodies);
+
+  let birdsRemaining = level.birdsAllowed;
+  let bird = null;
+  let state = 'idle'; // 'aiming' | 'flying'
+  let dragging = false;
+  let particles = [];
+  let settleTimer = 0;
+  let running = true;
+
+  function updateLabels(){
+    birdsLabel.textContent = 'Fåglar kvar: ' + birdsRemaining;
+    enemiesLabel.textContent = 'Fiender kvar: ' + enemyBodies.filter(e=>!e.removed).length;
+  }
+
+  function spawnBird(){
+    bird = Bodies.circle(ANCHOR.x, ANCHOR.y, 20, {friction:0.5, restitution:0.3, isStatic:true});
+    World.add(engine.world, bird);
+    state = 'aiming';
+  }
+
+  function launchBird(dx, dy){
+    Body.setStatic(bird, false);
+    Body.setVelocity(bird, {x:dx*POWER, y:dy*POWER});
+    Body.setAngularVelocity(bird, dx*0.002);
+    state = 'flying';
+    birdsRemaining--;
+    updateLabels();
+  }
+
+  function getCanvasPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width/rect.width;
+    const scaleY = canvas.height/rect.height;
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
+  }
+  function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+  function onDown(evt){
+    if(state!=='aiming' || !bird) return;
+    const pos = getCanvasPos(evt);
+    if(dist(pos, bird.position) < 30) dragging = true;
+  }
+  function onMove(evt){
+    if(!dragging || !bird) return;
+    if(evt.cancelable) evt.preventDefault();
+    const pos = getCanvasPos(evt);
+    let dx = pos.x - ANCHOR.x;
+    let dy = pos.y - ANCHOR.y;
+    const d = Math.hypot(dx,dy);
+    if(d > MAX_PULL){ dx = dx/d*MAX_PULL; dy = dy/d*MAX_PULL; }
+    Body.setPosition(bird, {x:ANCHOR.x+dx, y:ANCHOR.y+dy});
+  }
+  function onUp(){
+    if(!dragging || !bird) return;
+    dragging = false;
+    const dx = ANCHOR.x - bird.position.x;
+    const dy = ANCHOR.y - bird.position.y;
+    if(Math.hypot(dx,dy) < 12){
+      Body.setPosition(bird, ANCHOR);
+      return;
+    }
+    launchBird(dx, dy);
+  }
+
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  canvas.addEventListener('touchstart', onDown, {passive:true});
+  canvas.addEventListener('touchmove', onMove, {passive:false});
+  canvas.addEventListener('touchend', onUp);
+
+  function spawnParticles(x, y, power, color){
+    const n = Math.min(14, 4+Math.floor(power));
+    for(let i=0; i<n; i++){
+      const ang = Math.random()*Math.PI*2;
+      const spd = 1+Math.random()*power*0.4;
+      particles.push({
+        x, y,
+        vx:Math.cos(ang)*spd,
+        vy:Math.sin(ang)*spd - 2,
+        life:1,
+        color: color || (Math.random()<0.5 ? '#a0662f' : '#8a8f98')
+      });
+    }
+  }
+  function updateParticles(){
+    particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.life-=0.03; });
+    particles = particles.filter(p=>p.life>0);
+  }
+
+  Events.on(engine, 'collisionStart', (event)=>{
+    event.pairs.forEach(pair=>{
+      const {bodyA, bodyB} = pair;
+      const relVel = Math.hypot(bodyA.velocity.x-bodyB.velocity.x, bodyA.velocity.y-bodyB.velocity.y);
+      if(relVel > 3){
+        spawnParticles((bodyA.position.x+bodyB.position.x)/2, (bodyA.position.y+bodyB.position.y)/2, relVel);
+      }
+      [bodyA, bodyB].forEach(b=>{
+        if(b.isEnemy && !b.removed && relVel > 4){
+          b.removed = true;
+          spawnParticles(b.position.x, b.position.y, 12, '#ef4444');
+          Composite.remove(engine.world, b);
+          updateLabels();
+        }
+      });
+    });
+  });
+
+  function drawTrajectory(){
+    if(!dragging || !bird) return;
+    let px = bird.position.x, py = bird.position.y;
+    let vx = (ANCHOR.x-bird.position.x)*POWER;
+    let vy = (ANCHOR.y-bird.position.y)*POWER;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    for(let i=0; i<18; i++){
+      vy += 0.9;
+      px += vx*0.9;
+      py += vy*0.9;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawBackground(){
+    const g = ctx.createLinearGradient(0,0,0,CH);
+    g.addColorStop(0,'#1b2740');
+    g.addColorStop(1,'#0f1622');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,CW,CH);
+    ctx.fillStyle = '#2d4a2f';
+    ctx.fillRect(0, GROUND_Y+14, CW, CH-(GROUND_Y+14));
+    ctx.fillStyle = '#22381f';
+    ctx.fillRect(0, GROUND_Y+14, CW, 6);
+  }
+
+  function drawSlingshot(){
+    ctx.strokeStyle = '#5b3a1e';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(ANCHOR.x-14, GROUND_Y+14);
+    ctx.lineTo(ANCHOR.x-14, ANCHOR.y-10);
+    ctx.moveTo(ANCHOR.x+14, GROUND_Y+14);
+    ctx.lineTo(ANCHOR.x+14, ANCHOR.y-10);
+    ctx.stroke();
+
+    if(bird){
+      ctx.strokeStyle = '#8a5a2b';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(ANCHOR.x-14, ANCHOR.y-10);
+      ctx.lineTo(bird.position.x, bird.position.y);
+      ctx.moveTo(ANCHOR.x+14, ANCHOR.y-10);
+      ctx.lineTo(bird.position.x, bird.position.y);
+      ctx.stroke();
+    }
+  }
+
+  function drawBlocks(){
+    blockBodies.forEach(b=>{
+      ctx.save();
+      ctx.translate(b.position.x, b.position.y);
+      ctx.rotate(b.angle);
+      const w=36, h=36;
+      if(b.material==='stone'){ ctx.fillStyle='#9aa0a6'; ctx.strokeStyle='#6b7075'; }
+      else { ctx.fillStyle='#b5794a'; ctx.strokeStyle='#7a4f2b'; }
+      ctx.lineWidth = 2;
+      ctx.fillRect(-w/2,-h/2,w,h);
+      ctx.strokeRect(-w/2,-h/2,w,h);
+      ctx.restore();
+    });
+  }
+
+  function drawEnemies(){
+    enemyBodies.forEach(e=>{
+      if(e.removed) return;
+      ctx.save();
+      ctx.translate(e.position.x, e.position.y);
+      ctx.beginPath();
+      ctx.arc(0,0,16,0,Math.PI*2);
+      ctx.fillStyle = '#e94b3c';
+      ctx.fill();
+      ctx.strokeStyle = '#a5271b';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath(); ctx.arc(-5,-2,2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5,-2,2,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-6,6); ctx.quadraticCurveTo(0,2,6,6); ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawBird(){
+    if(!bird) return;
+    ctx.save();
+    ctx.translate(bird.position.x, bird.position.y);
+    ctx.rotate(bird.angle);
+    ctx.beginPath();
+    ctx.arc(0,0,20,0,Math.PI*2);
+    ctx.closePath();
+    ctx.clip();
+    if(jakubImg.complete){
+      ctx.drawImage(jakubImg, -20,-20,40,40);
+    } else {
+      ctx.fillStyle = '#f5a623';
+      ctx.fillRect(-20,-20,40,40);
+    }
+    ctx.restore();
+    ctx.strokeStyle = '#ff5a36';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(bird.position.x, bird.position.y, 20, 0, Math.PI*2);
+    ctx.stroke();
+  }
+
+  function drawParticles(){
+    particles.forEach(p=>{
+      ctx.globalAlpha = Math.max(p.life,0);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,3,0,Math.PI*2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function render(){
+    drawBackground();
+    drawSlingshot();
+    drawTrajectory();
+    drawBlocks();
+    drawEnemies();
+    drawBird();
+    drawParticles();
+  }
+
+  function checkRoundEnd(){
+    const enemiesLeft = enemyBodies.filter(e=>!e.removed).length;
+    if(enemiesLeft===0){
+      running = false;
+      showAjEnd(true);
+    } else if(birdsRemaining<=0){
+      running = false;
+      showAjEnd(false);
+    } else {
+      spawnBird();
+    }
+  }
+
+  function showAjEnd(won){
+    const overlay = document.createElement('div');
+    overlay.className = 'aj-endscreen';
+    if(won){
+      overlay.innerHTML =
+        '<p>🎉 Nivå '+levelNum+' klar!</p>' +
+        (levelNum<10 ? '<button id="ajNext">Nästa nivå</button>' : '<p style="font-size:13px;color:var(--muted);font-weight:500;">Alla 10 nivåer klara!</p>') +
+        '<button id="ajRetryWin">Spela om</button>' +
+        '<button id="ajBackWin">Nivåval</button>';
+    } else {
+      overlay.innerHTML =
+        '<p>💥 Slut på fåglar. Nivån misslyckades.</p>' +
+        '<button id="ajRetry">Försök igen</button>' +
+        '<button id="ajBack">Nivåval</button>';
+    }
+    container.appendChild(overlay);
+
+    if(won && levelNum<10){
+      document.getElementById('ajNext').addEventListener('click', ()=>{ overlay.remove(); startAjLevel(container, levelNum+1); });
+    }
+    document.getElementById(won ? 'ajRetryWin' : 'ajRetry').addEventListener('click', ()=>{
+      overlay.remove(); startAjLevel(container, levelNum);
+    });
+    document.getElementById(won ? 'ajBackWin' : 'ajBack').addEventListener('click', ()=>{
+      overlay.remove(); renderAjLevelSelect(container);
+    });
+  }
+
+  function loop(){
+    if(!running) return;
+    Engine.update(engine, 1000/60);
+    updateParticles();
+    render();
+
+    if(state==='flying'){
+      const speed = Math.hypot(bird.velocity.x, bird.velocity.y);
+      const offscreen = bird.position.x>CW+40 || bird.position.x<-40 || bird.position.y>CH+80;
+      if(speed<0.15 || offscreen){
+        settleTimer++;
+        if(settleTimer>30 || offscreen){
+          settleTimer = 0;
+          checkRoundEnd();
+        }
+      } else {
+        settleTimer = 0;
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  updateLabels();
+  spawnBird();
+  loop();
 }
 </script>
 </body>
