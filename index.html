@@ -742,6 +742,141 @@
   }
   .aj-endscreen button:hover{filter:brightness(1.08);}
 
+  /* ---------- Jakub Live Tracker ---------- */
+  #startTrackerBtn{
+    background:var(--now);
+    color:#fff;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:10px 20px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #startTrackerBtn:hover{filter:brightness(1.08);}
+
+  .tracker-map-wrap{
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .tracker-map{
+    position:relative;
+    height:230px;
+    background:
+      radial-gradient(ellipse at 75% 85%, rgba(30,90,140,0.55) 0%, rgba(30,90,140,0.0) 45%),
+      linear-gradient(160deg, #1c3b2a 0%, #223d2c 40%, #16324a 75%, #0d2438 100%);
+    overflow:hidden;
+  }
+  .tracker-radar-sweep{
+    position:absolute;
+    inset:-40%;
+    background:conic-gradient(from 0deg, rgba(255,90,54,0.22), transparent 28%);
+    animation:trackerSweep 4s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes trackerSweep{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+  .tracker-zone{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+  }
+  .tracker-zone-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(240,242,247,0.55);
+    border:1px solid rgba(240,242,247,0.7);
+  }
+  .tracker-zone-label{
+    font-size:10px;
+    color:var(--muted);
+    background:rgba(10,12,18,0.55);
+    padding:1px 6px;
+    border-radius:4px;
+    white-space:nowrap;
+  }
+
+  .tracker-marker{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    transition:left 1.2s cubic-bezier(.3,.7,.2,1), top 1.2s cubic-bezier(.3,.7,.2,1);
+    width:16px;
+    height:16px;
+  }
+  .tracker-pulse{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:var(--now);
+    opacity:0.55;
+    animation:trackerPulse 1.6s ease-out infinite;
+  }
+  @keyframes trackerPulse{
+    0%{transform:scale(1);opacity:0.55;}
+    100%{transform:scale(3.2);opacity:0;}
+  }
+  .tracker-dot{
+    position:absolute;
+    inset:4px;
+    border-radius:50%;
+    background:var(--now);
+    border:2px solid #fff;
+    box-shadow:0 0 8px 2px rgba(255,90,54,0.7);
+  }
+
+  .tracker-corner-photo{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:46px;
+    height:46px;
+    object-fit:cover;
+    border-radius:50%;
+    border:2px solid var(--now);
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    z-index:5;
+  }
+  .tracker-live-badge{
+    position:absolute;
+    top:10px;
+    left:10px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    background:rgba(10,12,18,0.6);
+    padding:4px 8px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:700;
+    color:#fff;
+    letter-spacing:0.04em;
+    z-index:5;
+  }
+  .tracker-live-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:#ef4444;
+    animation:trackerLiveBlink 1.4s ease-in-out infinite;
+  }
+  @keyframes trackerLiveBlink{0%,100%{opacity:1;}50%{opacity:0.25;}}
+
+  .tracker-status{
+    text-align:center;
+    font-size:14px;
+    font-weight:600;
+    margin-top:12px;
+  }
+  .tracker-meta{
+    text-align:center;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+
   #startChatBtn{
     background:var(--now);
     color:#fff;
@@ -981,6 +1116,16 @@
     </div>
     <div id="ajContainer">
       <button id="startAjBtn">Starta spel</button>
+    </div>
+  </div>
+
+  <div class="chatbot-card">
+    <div class="chatbot-head">
+      <span class="chatbot-title">Jakub Live Tracker</span>
+      <span class="chatbot-sub">följer Jakub i (typ) realtid</span>
+    </div>
+    <div id="trackerContainer">
+      <button id="startTrackerBtn">Starta spårning</button>
     </div>
   </div>
 
@@ -2975,6 +3120,69 @@ function startAjLevel(container, levelNum){
   updateLabels();
   spawnBird();
   loop();
+}
+
+/* ---------- JAKUB LIVE TRACKER (laddas bara vid klick) ---------- */
+document.getElementById('startTrackerBtn').addEventListener('click', initJakubTracker, {once:true});
+
+function initJakubTracker(){
+  const container = document.getElementById('trackerContainer');
+
+  const LOCATIONS = {
+    horby: {x:48, y:38, name:'Hörby', icon:'🏠'},
+    vipan: {x:24, y:66, name:'Vipan, Lund', icon:'🏫'},
+    polen: {x:83, y:82, name:'Polen', icon:'🇵🇱'}
+  };
+
+  container.innerHTML =
+    '<div class="tracker-map-wrap">' +
+      '<img src="Jakub.png" alt="Jakub" class="tracker-corner-photo">' +
+      '<div class="tracker-live-badge"><span class="tracker-live-dot"></span>LIVE</div>' +
+      '<div class="tracker-map" id="trackerMap">' +
+        '<div class="tracker-radar-sweep"></div>' +
+        '<div class="tracker-zone" style="left:'+LOCATIONS.horby.x+'%;top:'+LOCATIONS.horby.y+'%;">' +
+          '<div class="tracker-zone-dot"></div><span class="tracker-zone-label">Hörby</span>' +
+        '</div>' +
+        '<div class="tracker-zone" style="left:'+LOCATIONS.vipan.x+'%;top:'+LOCATIONS.vipan.y+'%;">' +
+          '<div class="tracker-zone-dot"></div><span class="tracker-zone-label">Vipan</span>' +
+        '</div>' +
+        '<div class="tracker-zone" style="left:'+LOCATIONS.polen.x+'%;top:'+LOCATIONS.polen.y+'%;">' +
+          '<div class="tracker-zone-dot"></div><span class="tracker-zone-label">Polen</span>' +
+        '</div>' +
+        '<div class="tracker-marker" id="trackerMarker">' +
+          '<div class="tracker-pulse"></div>' +
+          '<div class="tracker-dot"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="tracker-status" id="trackerStatus">📍 Spårar...</div>' +
+    '<div class="tracker-meta" id="trackerMeta">—</div>';
+
+  const marker = document.getElementById('trackerMarker');
+  const statusEl = document.getElementById('trackerStatus');
+  const metaEl = document.getElementById('trackerMeta');
+
+  function pickLocation(){
+    const r = Math.random();
+    if(r < 0.7) return 'horby';   // mest i Hörby
+    if(r < 0.9) return 'vipan';   // ibland på Vipan
+    return 'polen';               // sällan i Polen
+  }
+
+  function pad2(n){ return n<10 ? '0'+n : n; }
+
+  function moveMarker(){
+    const key = pickLocation();
+    const loc = LOCATIONS[key];
+    marker.style.left = loc.x + '%';
+    marker.style.top = loc.y + '%';
+    statusEl.textContent = '📍 Jakub är just nu i ' + loc.name + ' ' + loc.icon;
+    const now = new Date();
+    metaEl.textContent = 'Senast uppdaterad: ' + pad2(now.getHours())+':'+pad2(now.getMinutes())+':'+pad2(now.getSeconds());
+  }
+
+  moveMarker();
+  setInterval(moveMarker, 9000);
 }
 </script>
 </body>
