@@ -768,14 +768,12 @@
     background:#0f1622;
     overflow:hidden;
   }
-  .tracker-osm-frame{
+  .tracker-svg-map{
     position:absolute;
     inset:0;
     width:100%;
     height:100%;
-    border:0;
-    pointer-events:none;
-    filter:grayscale(0.35) brightness(0.72) contrast(1.05);
+    display:block;
   }
   .tracker-radar-sweep{
     position:absolute;
@@ -3256,7 +3254,12 @@ function initJakubTracker(){
     zoomedIn = false;
     const map =
       '<div class="tracker-map" id="trackerMap">' +
-        '<iframe class="tracker-osm-frame" src="https://www.openstreetmap.org/export/embed.html?bbox=11.5%2C53.0%2C20.5%2C57.0&layer=mapnik" loading="lazy" title="Karta"></iframe>' +
+        '<svg class="tracker-svg-map" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">' +
+          '<rect x="0" y="0" width="100" height="100" fill="#12314a"></rect>' +
+          '<path d="M8,10 L38,5 L45,25 L40,45 L25,50 L10,40 Z" fill="#2d4a2f" stroke="#1c2f1c" stroke-width="0.6"></path>' +
+          '<path d="M0,45 L15,42 L18,58 L5,65 L0,55 Z" fill="#2d4a2f" stroke="#1c2f1c" stroke-width="0.6"></path>' +
+          '<path d="M35,60 L100,55 L100,100 L20,100 L25,75 Z" fill="#33502f" stroke="#1c2f1c" stroke-width="0.6"></path>' +
+        '</svg>' +
         '<div class="tracker-radar-sweep"></div>' +
         '<div class="tracker-zone" style="left:'+PLACES.horby.overview.x+'%;top:'+PLACES.horby.overview.y+'%;"><div class="tracker-zone-dot"></div><span class="tracker-zone-label">Hörby</span></div>' +
         '<div class="tracker-zone" style="left:'+PLACES.vipan.overview.x+'%;top:'+PLACES.vipan.overview.y+'%;"><div class="tracker-zone-dot"></div><span class="tracker-zone-label">Vipan</span></div>' +
