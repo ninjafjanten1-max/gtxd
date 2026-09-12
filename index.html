@@ -765,10 +765,17 @@
   .tracker-map{
     position:relative;
     height:230px;
-    background:
-      radial-gradient(ellipse at 75% 85%, rgba(30,90,140,0.55) 0%, rgba(30,90,140,0.0) 45%),
-      linear-gradient(160deg, #1c3b2a 0%, #223d2c 40%, #16324a 75%, #0d2438 100%);
+    background:#0f1622;
     overflow:hidden;
+  }
+  .tracker-osm-frame{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    border:0;
+    pointer-events:none;
+    filter:grayscale(0.35) brightness(0.72) contrast(1.05);
   }
   .tracker-radar-sweep{
     position:absolute;
@@ -804,9 +811,12 @@
   .tracker-marker{
     position:absolute;
     transform:translate(-50%,-50%);
-    transition:left 1.2s cubic-bezier(.3,.7,.2,1), top 1.2s cubic-bezier(.3,.7,.2,1);
+    transition:left 2s cubic-bezier(.3,.7,.2,1), top 2s cubic-bezier(.3,.7,.2,1);
     width:16px;
     height:16px;
+  }
+  .tracker-marker.slow-move{
+    transition:left 6s cubic-bezier(.4,.1,.2,1), top 6s cubic-bezier(.4,.1,.2,1);
   }
   .tracker-pulse{
     position:absolute;
@@ -816,6 +826,7 @@
     opacity:0.55;
     animation:trackerPulse 1.6s ease-out infinite;
   }
+  .tracker-marker.traveling .tracker-pulse{display:none;}
   @keyframes trackerPulse{
     0%{transform:scale(1);opacity:0.55;}
     100%{transform:scale(3.2);opacity:0;}
@@ -827,6 +838,17 @@
     background:var(--now);
     border:2px solid #fff;
     box-shadow:0 0 8px 2px rgba(255,90,54,0.7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0;
+  }
+  .tracker-marker.traveling .tracker-dot{
+    inset:-6px;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+    font-size:20px;
   }
 
   .tracker-corner-photo{
@@ -864,6 +886,12 @@
   }
   @keyframes trackerLiveBlink{0%,100%{opacity:1;}50%{opacity:0.25;}}
 
+  .tracker-map--detail{
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.05) 0%, transparent 50%),
+      linear-gradient(160deg, #26314a 0%, #1c2438 60%, #141a2c 100%);
+  }
+
   .tracker-status{
     text-align:center;
     font-size:14px;
@@ -876,6 +904,23 @@
     color:var(--muted);
     margin-top:2px;
   }
+  .tracker-controls{
+    text-align:center;
+    margin-top:10px;
+  }
+  .tracker-zoom-btn{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-weight:600;
+    padding:8px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+  }
+  .tracker-zoom-btn:hover:not(:disabled){background:var(--now);border-color:var(--now);color:#fff;}
+  .tracker-zoom-btn:disabled{opacity:0.4;cursor:default;}
 
   #startChatBtn{
     background:var(--now);
@@ -1181,6 +1226,7 @@ const schoolLessons = [
   {day:5, start:"10:15", end:"11:15", title:"Service och bemötande Nivå 1", meta:"SöT · E209", color:"#b5541a"},
   {day:5, start:"12:20", end:"13:30", title:"Svenska Nivå 2", meta:"TvC · E177", color:"#1746d8"},
   {day:5, start:"13:40", end:"14:55", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
+  {day:5, start:"16:30", end:"19:00", title:"Kyrka", meta:"", color:"#5b21b6"},
 ];
 
 const dayNames = {1:"Måndag",2:"Tisdag",3:"Onsdag",4:"Torsdag",5:"Fredag"};
@@ -3128,61 +3174,207 @@ document.getElementById('startTrackerBtn').addEventListener('click', initJakubTr
 function initJakubTracker(){
   const container = document.getElementById('trackerContainer');
 
-  const LOCATIONS = {
-    horby: {x:48, y:38, name:'Hörby', icon:'🏠'},
-    vipan: {x:24, y:66, name:'Vipan, Lund', icon:'🏫'},
-    polen: {x:83, y:82, name:'Polen', icon:'🇵🇱'}
+  const PLACES = {
+    horby: {
+      name:'Hörby',
+      overview:{x:24, y:29},
+      spots:[
+        {name:'Hemma', x:40, y:58},
+        {name:'Hörby centrum', x:62, y:42},
+        {name:'ICA Kvantum', x:72, y:60},
+        {name:'Hörby station', x:30, y:30},
+        {name:'Ringsjöskolan', x:55, y:78},
+        {name:'Frostavallen', x:20, y:68}
+      ]
+    },
+    vipan: {
+      name:'Vipan, Lund',
+      overview:{x:19, y:33},
+      spots:[
+        {name:'Matsalen', x:50, y:50},
+        {name:'Idrottshallen', x:72, y:30},
+        {name:'Korridor B', x:28, y:35},
+        {name:'Skolgården', x:60, y:72},
+        {name:'Cafeterian', x:20, y:60}
+      ]
+    },
+    polen: {
+      name:'Polen',
+      overview:{x:72, y:70},
+      spots:[
+        {name:'Hotellet', x:35, y:40},
+        {name:'Stranden', x:72, y:65},
+        {name:'Gamla stan', x:50, y:28},
+        {name:'Centrum', x:60, y:55}
+      ]
+    }
   };
 
-  container.innerHTML =
-    '<div class="tracker-map-wrap">' +
-      '<img src="Jakub.png" alt="Jakub" class="tracker-corner-photo">' +
-      '<div class="tracker-live-badge"><span class="tracker-live-dot"></span>LIVE</div>' +
-      '<div class="tracker-map" id="trackerMap">' +
-        '<div class="tracker-radar-sweep"></div>' +
-        '<div class="tracker-zone" style="left:'+LOCATIONS.horby.x+'%;top:'+LOCATIONS.horby.y+'%;">' +
-          '<div class="tracker-zone-dot"></div><span class="tracker-zone-label">Hörby</span>' +
-        '</div>' +
-        '<div class="tracker-zone" style="left:'+LOCATIONS.vipan.x+'%;top:'+LOCATIONS.vipan.y+'%;">' +
-          '<div class="tracker-zone-dot"></div><span class="tracker-zone-label">Vipan</span>' +
-        '</div>' +
-        '<div class="tracker-zone" style="left:'+LOCATIONS.polen.x+'%;top:'+LOCATIONS.polen.y+'%;">' +
-          '<div class="tracker-zone-dot"></div><span class="tracker-zone-label">Polen</span>' +
-        '</div>' +
-        '<div class="tracker-marker" id="trackerMarker">' +
-          '<div class="tracker-pulse"></div>' +
-          '<div class="tracker-dot"></div>' +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="tracker-status" id="trackerStatus">📍 Spårar...</div>' +
-    '<div class="tracker-meta" id="trackerMeta">—</div>';
+  let currentMacro = 'horby';
+  let currentSpotIndex = 0;
+  let zoomedIn = false;
+  let traveling = false;
+  let overviewJitter = {x:0, y:0};
 
-  const marker = document.getElementById('trackerMarker');
-  const statusEl = document.getElementById('trackerStatus');
-  const metaEl = document.getElementById('trackerMeta');
-
-  function pickLocation(){
-    const r = Math.random();
-    if(r < 0.7) return 'horby';   // mest i Hörby
-    if(r < 0.9) return 'vipan';   // ibland på Vipan
-    return 'polen';               // sällan i Polen
-  }
+  let marker, dotIcon, statusEl, metaEl, zoomBtn;
 
   function pad2(n){ return n<10 ? '0'+n : n; }
-
-  function moveMarker(){
-    const key = pickLocation();
-    const loc = LOCATIONS[key];
-    marker.style.left = loc.x + '%';
-    marker.style.top = loc.y + '%';
-    statusEl.textContent = '📍 Jakub är just nu i ' + loc.name + ' ' + loc.icon;
+  function stampMeta(){
     const now = new Date();
     metaEl.textContent = 'Senast uppdaterad: ' + pad2(now.getHours())+':'+pad2(now.getMinutes())+':'+pad2(now.getSeconds());
   }
 
-  moveMarker();
-  setInterval(moveMarker, 9000);
+  function baseHTML(innerMap){
+    return '<div class="tracker-map-wrap">' +
+      '<img src="Jakub.png" alt="Jakub" class="tracker-corner-photo">' +
+      '<div class="tracker-live-badge"><span class="tracker-live-dot"></span>LIVE</div>' +
+      innerMap +
+    '</div>' +
+    '<div class="tracker-status" id="trackerStatus">📍 Spårar...</div>' +
+    '<div class="tracker-meta" id="trackerMeta">—</div>' +
+    '<div class="tracker-controls"><button class="tracker-zoom-btn" id="trackerZoomBtn"></button></div>';
+  }
+
+  function markerHTML(id){
+    return '<div class="tracker-marker" id="'+id+'">' +
+      '<div class="tracker-pulse"></div>' +
+      '<div class="tracker-dot" id="trackerDotIcon"></div>' +
+    '</div>';
+  }
+
+  function bindCommon(){
+    marker = document.getElementById('trackerMarker');
+    dotIcon = document.getElementById('trackerDotIcon');
+    statusEl = document.getElementById('trackerStatus');
+    metaEl = document.getElementById('trackerMeta');
+    zoomBtn = document.getElementById('trackerZoomBtn');
+    zoomBtn.disabled = traveling;
+    zoomBtn.addEventListener('click', toggleZoom);
+  }
+
+  function renderOverview(){
+    zoomedIn = false;
+    const map =
+      '<div class="tracker-map" id="trackerMap">' +
+        '<iframe class="tracker-osm-frame" src="https://www.openstreetmap.org/export/embed.html?bbox=11.5%2C53.0%2C20.5%2C57.0&layer=mapnik" loading="lazy" title="Karta"></iframe>' +
+        '<div class="tracker-radar-sweep"></div>' +
+        '<div class="tracker-zone" style="left:'+PLACES.horby.overview.x+'%;top:'+PLACES.horby.overview.y+'%;"><div class="tracker-zone-dot"></div><span class="tracker-zone-label">Hörby</span></div>' +
+        '<div class="tracker-zone" style="left:'+PLACES.vipan.overview.x+'%;top:'+PLACES.vipan.overview.y+'%;"><div class="tracker-zone-dot"></div><span class="tracker-zone-label">Vipan</span></div>' +
+        '<div class="tracker-zone" style="left:'+PLACES.polen.overview.x+'%;top:'+PLACES.polen.overview.y+'%;"><div class="tracker-zone-dot"></div><span class="tracker-zone-label">Polen</span></div>' +
+        markerHTML('trackerMarker') +
+      '</div>';
+    container.innerHTML = baseHTML(map);
+    bindCommon();
+    zoomBtn.textContent = '🔍 Zooma in på ' + PLACES[currentMacro].name;
+    placeOverviewMarker(false);
+    statusEl.textContent = '📍 Jakub är just nu i ' + PLACES[currentMacro].name;
+    stampMeta();
+  }
+
+  function renderDetail(){
+    zoomedIn = true;
+    const p = PLACES[currentMacro];
+    let zones = '';
+    p.spots.forEach((s,i)=>{
+      zones += '<div class="tracker-zone" style="left:'+s.x+'%;top:'+s.y+'%;"><div class="tracker-zone-dot"></div><span class="tracker-zone-label">'+s.name+'</span></div>';
+    });
+    const map =
+      '<div class="tracker-map tracker-map--detail" id="trackerMap">' +
+        '<div class="tracker-radar-sweep"></div>' +
+        zones +
+        markerHTML('trackerMarker') +
+      '</div>';
+    container.innerHTML = baseHTML(map);
+    bindCommon();
+    zoomBtn.textContent = '↩️ Tillbaka till översikt';
+    placeSpotMarker();
+    statusEl.textContent = '📍 Jakub är i ' + p.name + ' – ' + p.spots[currentSpotIndex].name;
+    stampMeta();
+  }
+
+  function toggleZoom(){
+    if(traveling) return;
+    if(zoomedIn) renderOverview();
+    else renderDetail();
+  }
+
+  function placeOverviewMarker(){
+    const base = PLACES[currentMacro].overview;
+    marker.style.left = (base.x+overviewJitter.x) + '%';
+    marker.style.top = (base.y+overviewJitter.y) + '%';
+  }
+  function placeSpotMarker(){
+    const s = PLACES[currentMacro].spots[currentSpotIndex];
+    marker.style.left = s.x + '%';
+    marker.style.top = s.y + '%';
+  }
+
+  /* liten, frekvent rörelse inom samma plats -> känns levande utan att
+     ge intryck av att han hoppar mellan städer hela tiden */
+  function microTick(){
+    if(traveling) return;
+    if(zoomedIn){
+      const spots = PLACES[currentMacro].spots;
+      let next = Math.floor(Math.random()*spots.length);
+      if(spots.length>1 && next===currentSpotIndex) next = (next+1)%spots.length;
+      currentSpotIndex = next;
+      placeSpotMarker();
+      statusEl.textContent = '📍 Jakub är i ' + PLACES[currentMacro].name + ' – ' + spots[currentSpotIndex].name;
+    } else {
+      overviewJitter = {x:(Math.random()*6-3), y:(Math.random()*6-3)};
+      placeOverviewMarker();
+    }
+    stampMeta();
+  }
+
+  /* sällan: faktiskt byte av stad, med en synlig resa istället för ett hopp */
+  function pickWeightedMacro(){
+    const r = Math.random();
+    if(r < 0.7) return 'horby';
+    if(r < 0.9) return 'vipan';
+    return 'polen';
+  }
+
+  function macroTick(){
+    if(traveling) return;
+    const next = pickWeightedMacro();
+    if(next === currentMacro) return; // stannar där han är, ingen "teleport"
+    travelTo(next);
+  }
+
+  function travelTo(nextMacro){
+    traveling = true;
+    if(zoomBtn) zoomBtn.disabled = true;
+    if(zoomedIn) renderOverview();
+
+    const vehicle = nextMacro==='polen' ? '✈️' : '🚗';
+    marker.classList.add('traveling','slow-move');
+    dotIcon.textContent = vehicle;
+    statusEl.textContent = vehicle + ' Jakub är på väg till ' + PLACES[nextMacro].name + '...';
+
+    const target = PLACES[nextMacro].overview;
+    marker.style.left = target.x + '%';
+    marker.style.top = target.y + '%';
+
+    setTimeout(()=>{
+      marker.classList.remove('traveling','slow-move');
+      dotIcon.textContent = '';
+      currentMacro = nextMacro;
+      currentSpotIndex = 0;
+      overviewJitter = {x:0,y:0};
+      traveling = false;
+      if(zoomBtn){
+        zoomBtn.disabled = false;
+        zoomBtn.textContent = '🔍 Zooma in på ' + PLACES[currentMacro].name;
+      }
+      statusEl.textContent = '📍 Jakub är just nu i ' + PLACES[currentMacro].name;
+      stampMeta();
+    }, 6100);
+  }
+
+  renderOverview();
+  setInterval(microTick, 16000);
+  setInterval(macroTick, 75000);
 }
 </script>
 </body>
