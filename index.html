@@ -920,6 +920,73 @@
   .tracker-zoom-btn:hover:not(:disabled){background:var(--now);border-color:var(--now);color:#fff;}
   .tracker-zoom-btn:disabled{opacity:0.4;cursor:default;}
 
+  /* ---------- Fråga Jakub ---------- */
+  #startOracleBtn{
+    background:var(--now);
+    color:#fff;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:10px 20px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #startOracleBtn:hover{filter:brightness(1.08);}
+
+  .oracle-photo-wrap{text-align:center;margin-bottom:14px;}
+  .oracle-photo{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid var(--now);
+    box-shadow:0 4px 14px rgba(0,0,0,0.4);
+  }
+  .oracle-photo.shaking{animation:oracleShake .1s linear infinite;}
+  @keyframes oracleShake{
+    0%,100%{transform:rotate(0deg);}
+    25%{transform:rotate(-9deg);}
+    75%{transform:rotate(9deg);}
+  }
+  .oracle-input-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  #oracleInput{
+    flex:1;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+  }
+  #oracleInput:focus{outline:1px solid var(--now);}
+  #oracleAsk{
+    background:var(--now);
+    color:#fff;
+    border:none;
+    font-weight:600;
+    padding:0 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+  }
+  #oracleAsk:hover{filter:brightness(1.08);}
+  .oracle-answer{
+    text-align:center;
+    font-size:15px;
+    font-weight:700;
+    min-height:24px;
+    opacity:0;
+    transition:opacity .35s ease;
+  }
+  .oracle-answer.show{opacity:1;}
+
   #startChatBtn{
     background:var(--now);
     color:#fff;
@@ -1172,6 +1239,16 @@
     </div>
   </div>
 
+  <div class="chatbot-card">
+    <div class="chatbot-head">
+      <span class="chatbot-title">Fråga Jakub</span>
+      <span class="chatbot-sub">ett orakel med (typ) alla svar</span>
+    </div>
+    <div id="oracleContainer">
+      <button id="startOracleBtn">Börja fråga</button>
+    </div>
+  </div>
+
   <footer>Linjen visar var i dagen du befinner dig just nu · streckade linjer visar tid mellan block · klicka på ett block för detaljer</footer>
 </div>
 
@@ -1195,6 +1272,7 @@ const schoolLessons = [
   {day:1, start:"09:45", end:"11:35", title:"Ellära Nivå 1", meta:"KaL · E206", color:"#3ecf6a"},
   {day:1, start:"12:15", end:"15:30", title:"Installationsteknik Nivå 1", meta:"CaJ · E174, E177", color:"#c2185b"},
   {day:1, start:"15:40", end:"16:40", title:"Naturkunskap Nivå 1a1", meta:"MiÅ · Q323", color:"#e08a1e"},
+  {day:1, start:"19:15", end:"20:45", title:"Thaiboxning", meta:"", color:"#ea580c"},
 
   // Tisdag
   {day:2, start:"08:20", end:"09:30", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
@@ -1211,6 +1289,7 @@ const schoolLessons = [
   {day:3, start:"13:00", end:"14:10", title:"Engelska Nivå 2", meta:"JoW, OhM · E177", color:"#d8cdb8"},
   {day:3, start:"14:20", end:"15:30", title:"Svenska Nivå 2", meta:"TvC · E177", color:"#1746d8"},
   {day:3, start:"16:00", end:"18:30", title:"Hemspråk", meta:"", color:"#7c3aed"},
+  {day:3, start:"19:15", end:"20:45", title:"Thaiboxning", meta:"", color:"#ea580c"},
 
   // Torsdag
   {day:4, start:"08:20", end:"09:20", title:"Naturkunskap Nivå 1a1", meta:"MiÅ · Q325", color:"#e08a1e"},
@@ -3378,6 +3457,67 @@ function initJakubTracker(){
   renderOverview();
   setInterval(microTick, 16000);
   setInterval(macroTick, 75000);
+}
+
+/* ---------- FRÅGA JAKUB (laddas bara vid klick) ---------- */
+document.getElementById('startOracleBtn').addEventListener('click', initJakubOracle, {once:true});
+
+function initJakubOracle(){
+  const container = document.getElementById('oracleContainer');
+  container.innerHTML =
+    '<div class="oracle-photo-wrap"><img src="Jakub.png" alt="Jakub" class="oracle-photo" id="oraclePhoto"></div>' +
+    '<div class="oracle-input-row">' +
+      '<input id="oracleInput" type="text" placeholder="Ställ en fråga till Jakub...">' +
+      '<button id="oracleAsk">Fråga</button>' +
+    '</div>' +
+    '<div class="oracle-answer" id="oracleAnswer"></div>';
+
+  const ANSWERS = [
+    'Ja, utan tvekan.',
+    'Nej, glöm det.',
+    'Absolut, kör på.',
+    'Definitivt inte.',
+    'Fråga igen senare.',
+    'Bara om du bor i Hörby.',
+    'Jonas Keidser säger nej.',
+    'Kanske, kanske inte.',
+    'Svaret finns i Polen.',
+    'Fråga Vipan istället.',
+    'Ja, men bara på tisdagar.',
+    'Nej, det blir aldrig så.',
+    'Helt klart, ja.',
+    'Tveksamt, men möjligt.',
+    'Jakub vet, men säger inget.',
+    'Ta två steg och tänk om.',
+    'Ja, om stjärnorna vill.',
+    'Nej, sov på saken.',
+    'Sannolikt ja.',
+    'Frågan är fel, svaret med.'
+  ];
+
+  const photo = document.getElementById('oraclePhoto');
+  const input = document.getElementById('oracleInput');
+  const askBtn = document.getElementById('oracleAsk');
+  const answerEl = document.getElementById('oracleAnswer');
+
+  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function ask(){
+    const q = input.value.trim();
+    if(!q) return;
+    askBtn.disabled = true;
+    answerEl.classList.remove('show');
+    photo.classList.add('shaking');
+    setTimeout(()=>{
+      photo.classList.remove('shaking');
+      answerEl.textContent = pickRandom(ANSWERS);
+      answerEl.classList.add('show');
+      askBtn.disabled = false;
+    }, 900);
+  }
+
+  askBtn.addEventListener('click', ask);
+  input.addEventListener('keydown', (ev)=>{ if(ev.key==='Enter') ask(); });
 }
 </script>
 </body>
